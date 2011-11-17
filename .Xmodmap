@@ -1,0 +1,10 @@
+clear Lock
+remove Control = Control_L
+keysym Muhenkan = Control_L NoSymbol
+keysym Eisu_toggle = Control_L NoSymbol
+add Control = Control_L
+
+keysym Zenkaku_Hankaku = Escape NoSymbol
+keysym Escape = Zenkaku_Hankaku NoSymbol
+keysym Tab = Tab Tab
+keycode 37 = Tab
