@@ -1,6 +1,6 @@
 !基本色設定
 *foreground: #99ffff
-*background: #114411
+*background: #113311
 *color0: yellow2
 *color1: #ff66ff
 *color2: chocolate1
@@ -17,4 +17,5 @@ emacs.font:DejaVu Sans Mono-9:rgba=rgb:hintstyle=hintslight
 URxvt.termName:rxvt
 URxvt.font:xft:Dejavu Sans Mono-9:rgba=rgb:hintslight,[codeset=ISO10646]xft:Migu 1M
 URxvt.letterSpace:-1
-URxvt.saveLines:256
+URxvt.saveLines:512
+URxvt.scrollBar:false
