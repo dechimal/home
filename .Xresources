@@ -8,6 +8,9 @@
 *color4: #66ff66
 *color5: orange
 
+!Mouse cursor
+Xcursor.theme: Vanilla-DMZ-AA
+
 !emacs
 emacs.UseXIM: none
 emacs.FontBackend: xft

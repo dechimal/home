@@ -4,15 +4,10 @@ userresources=$HOME/.Xresources
 usermodmap=$HOME/.Xmodmap
 sysresources=/etc/X11/xinit/.Xresources
 sysmodmap=/etc/X11/xinit/.Xmodmap
+wallpaper=$HOME/.wallpaper
 
 # change keyboard layout
 setxkbmap -layout jp
-
-# change cursor
-xsetroot -cursor_name left_ptr
-
-# set wallpaper
-hsetroot -center .wallpaper/img20110922212405-fullhd.png
 
 # merge in defaults and keymaps
 
@@ -30,6 +25,14 @@ fi
 
 if [ -f "$usermodmap" ]; then
      xmodmap "$usermodmap"
+fi
+
+# set default cursor (this command call after to merge xresources)
+xsetroot -cursor_name left_ptr
+
+# set wallpaper
+if [ -f $wallpaper ]; then
+    hsetroot -center $wallpaper
 fi
 
 # set im
