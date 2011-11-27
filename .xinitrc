@@ -51,6 +51,7 @@ LC_CTYPE=ja_JP.UTF-8
 # run xcompmgr for window transparency
 xcompmgr &
 
+cd $HOME
 exec xmonad
 
 # xclock -geometry 50x50-1+1 &
