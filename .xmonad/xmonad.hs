@@ -11,6 +11,8 @@ import XMonad
 import Data.Monoid
 import qualified System.IO.UTF8 as U
 import System.Exit
+import Control.Monad(sequence_, (>=>))
+import Control.Applicative
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map as M
@@ -22,6 +24,12 @@ import qualified XMonad.Layout.ResizableTile as R
 import qualified XMonad.Layout.SubLayouts as S
 import qualified XMonad.Layout.BoringWindows as B
 import qualified XMonad.Hooks.FadeInactive as F
+
+instance Applicative Query where
+    pure = return
+    f <*> m = do f' <- f
+                 x <- m
+                 return $ f' x
 
 -- The default number of workspaces (virtual screens) and their names.
 -- By default we use numeric strings, but any string may be used as a
@@ -88,10 +96,10 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) =
     , ((ma, xK_i), sendMessage $ S.pullGroup U)
     , ((ma, xK_m), sendMessage $ S.pullGroup D)
 
-    -- 
     , ((modm, xK_o), withFocused (sendMessage . S.MergeAll))
     , ((ms,   xK_o), withFocused (sendMessage . S.UnMerge))
 
+    -- Focus next/prev window on sublayout
     , ((mod1Mask .|. shiftMask,  xK_Tab), S.onGroup W.focusUp')
     , ((mod1Mask, xK_Tab), S.onGroup W.focusDown')
     , ((ma, xK_space), S.toSubl NextLayout)
@@ -133,7 +141,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) =
     , ((0, xK_Print), spawn "scrot")
 
     -- Firefox
-    , ((mod4Mask, xK_f), spawn "~/repos/firefox/i/bin/firefox -P -no-remote")
+    , ((mod4Mask, xK_f), spawn "firefox -P -no-remote")
 
     -- Open latest C++ specification draft with evince
     , ((ms, xK_n), spawn "evince ~/junk/doc/newer.pdf")
@@ -267,7 +275,17 @@ myEventHook= mempty
 -- Perform an arbitrary action on each internal state change or X event.
 -- See the 'XMonad.Hooks.DynamicLog' extension for examples.
 --
-myLogHook = F.fadeInactiveLogHook 0.8
+
+myLogHook = sequence_ [ fadeHook
+                      ]
+    where fadeHook =
+              F.fadeOutLogHook $ F.fadeIf (liftA2 pred F.isUnfocused className) 0.8
+          pred unfocused className = unfocused && (all (/= opaqueWindowClasses) ignores)
+
+opaqueWindowClasses = [ "Smplayer"
+                      , "Gimp"
+                      , "Inkscape"
+                      ]
 
 ------------------------------------------------------------------------
 -- Startup hook
