@@ -1,0 +1,5 @@
+#compdef asy
+
+_arguments \
+  ':command:_command_names -e' \
+  '*::arguments:_normal'
