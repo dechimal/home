@@ -1,5 +1,8 @@
 #compdef asy
 
+typeset opt_args
+local context stat line
+
 _arguments \
   ':command:_command_names -e' \
   '*::arguments:_normal'
