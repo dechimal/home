@@ -1,0 +1,7 @@
+#!/bin/zsh
+
+temp=`mktemp --tmpdir clang++i.XXXXXXXX`
+
+clang++ -I$HOME/repos/{boost,p-stade} -std=c++0x -xc++ "$@" -o $temp &&
+[ -x $temp ] && ./$temp
+rm $temp
