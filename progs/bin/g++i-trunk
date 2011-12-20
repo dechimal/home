@@ -3,5 +3,5 @@
 temp=`mktemp --tmpdir g++i-trunk.XXXXXXXX`
 
 g++-trunk -I$HOME/repos/{boost,p-stade} -std=gnu++0x -xc++ "$@" -o $temp &&
-[ -x $temp ] && ./$temp
+[ -x $temp ] && $temp
 rm $temp
