@@ -1,0 +1,3 @@
+#name : namespace ns1 = ns2;
+# --
+namespace ${ns1} = ${ns2};

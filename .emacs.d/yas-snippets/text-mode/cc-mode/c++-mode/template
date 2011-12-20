@@ -1,0 +1,4 @@
+#name : template<typename ...>
+# --
+template<${typename} ${T}>
+$0

@@ -1,0 +1,3 @@
+#name : typename f<...>::type
+# --
+typename ${f}<${x}>::type

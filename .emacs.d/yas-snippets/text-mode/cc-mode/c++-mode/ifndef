@@ -1,0 +1,6 @@
+#name : #ifndef
+# --
+if !defined $1_HPP_INCLUDED_
+#define      $1_HPP_INCLUDED_
+$0
+#endif
