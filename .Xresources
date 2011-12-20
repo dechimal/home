@@ -1,12 +1,22 @@
 !基本色設定
 *foreground: #99ffff
 *background: #113311
-*color0: yellow2
+*color0: #ffff00
 *color1: #ff66ff
-*color2: chocolate1
-*color3: green1
-*color4: #66ff66
-*color5: orange
+*color2: #ff8833
+*color3: #33ff00
+*color4: #9999ff
+*color5: #ff3333
+*color6: #bbbbbb
+*color7: #00ffee
+*color8: #eeff66
+*color9: #ffccff
+*color10: #ffbb66
+*color11: #88ff88
+*color12: #ccccff
+*color13: #ff8888
+*color14: #eeeeee
+*color15: #66ffee
 
 !Mouse cursor
 Xcursor.theme: Vanilla-DMZ-AA

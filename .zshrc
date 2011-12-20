@@ -7,19 +7,18 @@ bindkey -e
 # The following lines were added by compinstall
 zstyle :compinstall filename '/home/d/.zshrc'
 
+# add fpath for local defined completions
+grep -q ~/.zsh.d <<<$fpath || fpath=(~/.zsh.d $fpath)
+
 autoload -Uz compinit
 compinit
 # End of lines added by compinstall
 
-if [[ ! -z $SSH_CONNECTION ]]; then
-    ssh=' @'$SSH_CONNECTION
-fi
+[[ -n $SSH_CLIENT ]] && ssh=' |'`sed -r 's/ .*//;' <<<$SSH_CLIENT`
+[[ -n $SSH_AGENT_PID ]] && launcher=\*
 
-[[ ! -z $SSH_CLIENT ]] && ssh=' |'`echo $SSH_CLIENT | sed -r 's/ .*//;'`
-
-PS1="%n %(4c;...;)%3~$ssh%# "
-PATH=$(echo $PATH | sed -e 's,/home/d/progs/bin:,,g')
-PATH=/home/d/progs/bin:$PATH
+PS1="$launcher%n %(4c;...;)%3~$ssh%# "
+grep $HOME/progs/bin -q <<<$path || PATH=($HOME/progs/bin $path)
 
 LOVELIVE=(高坂穂乃果 絢瀬絵里 南ことり 園田海未 星空凛 西木野真姫 東條希 小泉花陽 矢澤にこ)
 
@@ -30,13 +29,15 @@ alias toclip='xsel -i -b'
 alias appendclip='xsel -a -b'
 alias draft='evince ~/junk/doc/newer.pdf &>/dev/null &|'
 alias xmm='xmodmap ~/.Xmodmap'
-alias semacs='sudo emacs -u d'
+alias semacs='sudo emacs -u d -nw'
 alias ldcrontab='crontab ~/.crontab'
 alias updatecrontab='perl -i -nle '\''s/(\d+)(-\w+)\s*$/($1+1).$2/e; print;'\'' ~/.crontab'
+source ~/.zshrc.local
+
 export EDITOR=emacs${WINDOWID:+client}
 export ALTERNATE_EDITOR=emacs
 
 setopt autopushd
 setopt extendedglob
 
-[[ $WINDOWID == '' ]] && export LOCALE=en_US.UTF-8
+[[ -z $WINDOWID ]] && export LOCALE=en_US.UTF-8

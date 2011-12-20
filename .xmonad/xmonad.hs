@@ -47,14 +47,17 @@ myWorkspaces = ["1","2","3","4","5","6","7","8","9"]
 -- Key bindings. Add, modify or remove key bindings here.
 --
 
-myKeys conf@(XConfig {XMonad.modMask = modm}) =
+myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     let ms = modm .|. shiftMask
         ma = modm .|. mod1Mask
         msa = ms .|. mod1Mask
     in M.fromList $
 
     -- launch a terminal
-    [ ((ms,xK_Return), spawn $ XMonad.terminal conf)
+    [ ((ms,xK_Return), spawn term)
+
+    -- launch a bits work terminal
+    , ((msa, xK_Return), spawn $ term ++ " -e ssh-agent zsh -c 'ssh-add ~/.ssh/id_rsa; exec zsh'")
 
     -- launch dmenu
     , ((modm, xK_p), spawn "exe=`dmenu_path | dmenu` && eval \"exec $exe\"")
@@ -280,7 +283,7 @@ myLogHook = sequence_ [ fadeHook
                       ]
     where fadeHook =
               F.fadeOutLogHook $ F.fadeIf (liftA2 pred F.isUnfocused className) 0.8
-          pred unfocused className = unfocused && (all (/= opaqueWindowClasses) ignores)
+          pred unfocused className = unfocused && (all (/= className) opaqueWindowClasses)
 
 opaqueWindowClasses = [ "Smplayer"
                       , "Gimp"
