@@ -32,7 +32,7 @@ alias xmm='xmodmap ~/.Xmodmap'
 alias semacs='sudo emacs -u d -nw'
 alias ldcrontab='crontab ~/.crontab'
 alias updatecrontab='perl -i -nle '\''s/(\d+)(-\w+)\s*$/($1+1).$2/e; print;'\'' ~/.crontab'
-source ~/.zshrc.local
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
 export EDITOR=emacs${WINDOWID:+client}
 export ALTERNATE_EDITOR=emacs
@@ -41,3 +41,7 @@ setopt autopushd
 setopt extendedglob
 
 [[ -z $WINDOWID ]] && export LOCALE=en_US.UTF-8
+
+precmd() {
+    path=($path)
+}

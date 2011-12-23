@@ -5,7 +5,8 @@ pkgnames=(gcc clang)
 
 source-gcc() {
     if [[ -d .git ]]; then
-        git pull --depth=1
+        git fetch --depth=1
+        git reset --hard origin/master
     else
         git clone --depth=1 git://gcc.gnu.org/git/gcc.git .
     fi
@@ -23,9 +24,11 @@ build-gcc() {
 
 source-clang() {
     if [[ -d .git ]]; then
-        git pull --depth=1
+        git fetch --depth=1
+        git reset --hard origin/master
         cd tools/clang
-        git pull --depth=1
+        git fetch --depth=1
+        git reset --hard origin/master
     else
         git clone --depth=1 http://llvm.org/git/llvm.git .
         cd tools/clang

@@ -207,7 +207,7 @@
 
 (require 'yasnippet)
 (yas/initialize)
-(setq yas/root-directory '("~/.emacs.d/yas-snippets"))
+(setq yas/root-directory '("~d/.emacs.d/yas-snippets"))
 (setq yas/trigger-key nil)
 (mapc 'yas/load-directory yas/root-directory)
 
@@ -223,7 +223,7 @@
 (define-key ac-menu-map "\C-n" 'ac-next)
 (ac-set-trigger-key "TAB")
 
-(setq ac-clang-executable "~/progs/bin/clang++")
+(setq ac-clang-executable "~d/progs/bin/clang++")
 (setq ac-clang-flags '("-I." "-std=c++0x"))
 
 (add-hook 'c++-mode-hook
