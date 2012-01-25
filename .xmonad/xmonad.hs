@@ -323,7 +323,6 @@ defaults = defaultConfig {
         focusFollowsMouse  = False,
         borderWidth        = 0,
         modMask            = mod4Mask,
-        numlockMask        = mod2Mask,
         workspaces         = myWorkspaces,
         normalBorderColor  = "#dddddd",
         focusedBorderColor = "#ff0000",

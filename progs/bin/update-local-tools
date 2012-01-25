@@ -61,6 +61,9 @@ source-boost() {
     fi
 }
 
+build-boost() {
+}
+
 update-package() {
     # update source
     mkdir -p src
