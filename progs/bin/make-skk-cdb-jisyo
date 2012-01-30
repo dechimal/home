@@ -1,3 +1,0 @@
-#!/bin/zsh
-setopt extendedglob
-yaskkserv_make_dictionary =(skkdic-expr2 $(echo /usr/share/skk/SKK-JISYO.[^.]# | sed s/\ /\ +\ /g)) /usr/share/skk/SKK-JISYO.L.yaskkserv

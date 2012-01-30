@@ -158,6 +158,8 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     --
     -- , ((modm              , xK_b), sendMessage ToggleStruts)
 
+    , ((modm, xK_d), spawn "zenity --info --text=\"`date`\"")
+
     -- Quitxmonad
     , ((ms,xK_q), io (exitWith ExitSuccess))
 
@@ -259,7 +261,8 @@ myManageHook = composeAll
     [ className =? "MPlayer"        --> doFloat
     -- , className =? "Gimp"           --> doFloat
     , resource  =? "desktop_window" --> doIgnore
-    , resource  =? "kdesktop"       --> doIgnore ]
+    , resource  =? "kdesktop"       --> doIgnore
+    , resource  =? "zenity"         --> doFloat ]
 
 ------------------------------------------------------------------------
 -- Event handling
