@@ -147,10 +147,13 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     , ((mod4Mask, xK_f), spawn "firefox -P -no-remote")
 
     -- Open latest C++ specification draft with evince
-    , ((ms, xK_n), spawn "evince ~/junk/doc/newer.pdf")
+    , ((ms, xK_n), spawn "evince ~/doc/c++/newer.pdf")
 
     -- Copy primary selection to clipboard
     , ((modm, xK_c), spawn "xsel -o -p | xsel -i -b")
+
+    -- Show Clock
+    , ((modm, xK_d), spawn "zenity --info --text=\"`date`\"")
 
     -- Toggle the status bar gap
     -- Use this binding with avoidStruts from Hooks.ManageDocks.

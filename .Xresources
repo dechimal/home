@@ -28,7 +28,7 @@ emacs.font:DejaVu Sans Mono-9:rgba=rgb:hintstyle=hintslight
 
 !urxvt
 URxvt.termName:rxvt
-URxvt.font:xft:Dejavu Sans Mono-9:rgba=rgb:hintslight,[codeset=ISO10646]xft:Migu 1M
+URxvt.font:xft:Dejavu Sans Mono-9:rgba=rgb:hintslight,[codeset=ISO10646]xft:Migu 2M
 URxvt.letterSpace:-1
 URxvt.saveLines:1024
 URxvt.scrollBar:false

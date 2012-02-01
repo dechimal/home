@@ -48,7 +48,7 @@
     (set-face-foreground 'font-lock-type-face "gold")
     (set-cursor-color "#ffccdd")
 
-    (set-fontset-font (frame-parameter nil 'font) '(#x80 . #x7ffff) "Migu 1M-10" nil)
+    (set-fontset-font (frame-parameter nil 'font) '(#x80 . #x7ffff) "Migu 2M-10" nil)
 
     (global-unset-key "\C-z")))
 
@@ -146,11 +146,11 @@
 (global-set-key [(control c)(control /)] 'comment-or-uncomment-region)
 
 ; uim を起動する
-(if window-system
-  (progn
-    (require 'uim)
-    (setq-default default-input-method "japanese-skk-uim")
-    (global-set-key [zenkaku-hankaku] 'toggle-input-method)))
+;; (if window-system
+;;   (progn
+;;     (require 'uim)
+;;     (setq-default default-input-method "japanese-skk-uim")
+;;     (global-set-key [zenkaku-hankaku] 'toggle-input-method)))
 
 ; term mode
 (require 'term)
