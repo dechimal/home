@@ -26,17 +26,6 @@
 
 (if window-system
   (progn
-  ;;   (dolist (alist '(default-frame-alist initial-frame-alist nil))
-  ;;     (setq alist
-  ;;           (append
-  ;;            '((foreground-color . "#99ffff")
-  ;;              (background-color . "#114411")
-  ;;              (font . "-bitstream-m+2vm+ipag circle-medium-*-iso10646-*")
-  ;;              (background-mode . 'dark))
-  ;;            alist)))
-
-  ;;   (set-background-color "#114411")
-  ;;   (set-foreground-color "#99ffff")
     (set-face-background 'region "Blue")
     (set-face-foreground 'font-lock-comment-face "green1")
     (set-face-foreground 'font-lock-variable-name-face nil)
@@ -144,13 +133,6 @@
 
 ; 範囲をコメント化/非コメント化
 (global-set-key [(control c)(control /)] 'comment-or-uncomment-region)
-
-; uim を起動する
-;; (if window-system
-;;   (progn
-;;     (require 'uim)
-;;     (setq-default default-input-method "japanese-skk-uim")
-;;     (global-set-key [zenkaku-hankaku] 'toggle-input-method)))
 
 ; term mode
 (require 'term)
