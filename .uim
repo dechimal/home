@@ -1,0 +1,12 @@
+;; -*- mode: scheme; coding: euc-jp -*-
+
+(define uim-pref-suppress-dot-uim-warning-dialog? #t)
+(require "japanese.scm")
+(set! ja-rk-rule-basic (append
+                        '((((","). ())("¡¤" "¡¤" "¡¤"))
+                          ((("."). ())("¡¥" "¡¥" "¡¥"))
+                          ((("x" "["). ())("¡Ú" "¡Ú" "¡Ú"))
+                          ((("x" "]"). ())("¡Û" "¡Û" "¡Û")))
+                        ja-rk-rule-basic))
+
+(ja-rk-rule-update)
