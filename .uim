@@ -2,11 +2,13 @@
 
 (define uim-pref-suppress-dot-uim-warning-dialog? #t)
 (require "japanese.scm")
-(set! ja-rk-rule-basic (append
-                        '((((","). ())("¡¤" "¡¤" "¡¤"))
+(define ja-rk-rule-user '((((","). ())("¡¤" "¡¤" "¡¤"))
                           ((("."). ())("¡¥" "¡¥" "¡¥"))
                           ((("x" "["). ())("¡Ú" "¡Ú" "¡Ú"))
-                          ((("x" "]"). ())("¡Û" "¡Û" "¡Û")))
-                        ja-rk-rule-basic))
+                          ((("x" "]"). ())("¡Û" "¡Û" "¡Û"))))
 
-(ja-rk-rule-update)
+(if (string>=? (uim-version) "1.6.0")
+    ((lambda ()
+      (set! ja-rk-rule-basic (append ja-rk-rule-user ja-rk-rule-basic))
+      (ja-rk-rule-update)))
+    (set! ja-rk-rule (append ja-rk-rule-user ja-rk-rule)))
