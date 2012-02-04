@@ -24,6 +24,7 @@ import qualified XMonad.Layout.ResizableTile as R
 import qualified XMonad.Layout.SubLayouts as S
 import qualified XMonad.Layout.BoringWindows as B
 import qualified XMonad.Hooks.FadeInactive as F
+import qualified XMonad.Hooks.InsertPosition as I
 
 instance Applicative Query where
     pure = return
@@ -322,7 +323,7 @@ defaults = defaultConfig {
 
       -- hooks, layouts
         layoutHook         = avoidStruts myLayout,
-        manageHook         = manageDocks <+> myManageHook,
+        manageHook         = I.insertPosition I.Below I.Older <+> myManageHook,
         handleEventHook    = myEventHook,
         logHook            = myLogHook,
         startupHook        = myStartupHook
