@@ -15,7 +15,7 @@ import Control.Monad(sequence_, (>=>))
 import Control.Applicative
 
 import qualified XMonad.StackSet as W
-import qualified Data.Map as M
+import Data.Map(fromList)
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks
 import XMonad.Util.Run(spawnPipe)
@@ -25,6 +25,7 @@ import qualified XMonad.Layout.SubLayouts as S
 import qualified XMonad.Layout.BoringWindows as B
 import qualified XMonad.Layout.Drawer as D
 import qualified XMonad.Layout.PerWorkspace as PW
+import qualified XMonad.Layout.Magnifier as M
 
 import qualified XMonad.Util.WindowProperties as P
 
@@ -57,7 +58,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     let ms = modm .|. shiftMask
         ma = modm .|. mod1Mask
         msa = ms .|. mod1Mask
-    in M.fromList $
+    in fromList $
 
     -- launch a terminal
     [ ((ms,xK_Return), spawn term)
@@ -135,6 +136,13 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
 
     -- Deincrement the number of windows in the master area
     , ((modm, xK_period), sendMessage (IncMasterN (-1)))
+
+    -- Toggle Magnifier Mode
+    , ((modm, xK_x), sendMessage M.Toggle)
+
+    -- Increase/Decrease Magnifying Rate
+    , ((modm, xK_z), sendMessage M.MagnifyMore)
+    , ((ms,   xK_z), sendMessage M.MagnifyLess)
     
     -- Screen shot
     , ((0, xK_Print), spawn "scrot")
@@ -180,7 +188,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
 ------------------------------------------------------------------------
 -- Mouse bindings: default actions bound to mouse events
 --
-myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
+myMouseBindings (XConfig {XMonad.modMask = modm}) = fromList $
 
     -- mod-button1, Set the window to floating mode and move by dragging
     [ ((modm, button1), (\w -> focus w >> mouseMoveWindow w
@@ -207,7 +215,8 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 -- The available layouts.  Note that each layout is separated by |||,
 -- which denotes layout choice.
 --
-myLayout = nav
+myLayout = M.magnifiercz (1.1/1)
+           $ nav
            $ B.boringWindows
            $ S.subLayout []
                  (Full ||| tiled ||| mirrorTiled)
