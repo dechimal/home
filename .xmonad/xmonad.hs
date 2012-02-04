@@ -23,6 +23,11 @@ import qualified XMonad.Layout.WindowNavigation as N
 import qualified XMonad.Layout.ResizableTile as R
 import qualified XMonad.Layout.SubLayouts as S
 import qualified XMonad.Layout.BoringWindows as B
+import qualified XMonad.Layout.Drawer as D
+import qualified XMonad.Layout.PerWorkspace as PW
+
+import qualified XMonad.Util.WindowProperties as P
+
 import qualified XMonad.Hooks.FadeInactive as F
 import qualified XMonad.Hooks.InsertPosition as I
 
@@ -202,13 +207,19 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 -- The available layouts.  Note that each layout is separated by |||,
 -- which denotes layout choice.
 --
-myLayout = nav $ B.boringWindows $ S.subLayout []
-                                               (Full ||| tiled ||| mirrorTiled)
-                                               (tiled ||| mirrorTiled)
+myLayout = nav
+           $ B.boringWindows
+           $ S.subLayout []
+                 (Full ||| tiled ||| mirrorTiled)
+                 $ gimpWS "2" (tiled ||| mirrorTiled)
   where
      -- default tiling algorithm partitions the screen into two panes
      tiled = R.ResizableTall nmaster delta ratio []
      mirrorTiled = Mirror $ R.ResizableTall nmaster mirrorDelta mirrorRatio []
+     gimpWS wsname = PW.onWorkspace wsname gimpLayout
+     gimpLayout = leftTiled $ rightTiled Full
+     leftTiled = D.onLeft $ D.simpleDrawer 0.01 0.2 (P.Role "gimp-toolbox")
+     rightTiled = D.onRight $ D.simpleDrawer 0.01 0.2 (P.Role "gimp-dock")
 
      -- WindowNavigation
      nav layout = N.configurableNavigation (N.navigateColor navColor) layout
