@@ -79,22 +79,21 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     , ((ms, xK_Tab),   B.focusUp)
 
     -- Move fucus to the right/left/up/down window
-    , ((modm, xK_k), sendMessage $ N.Go N.R)
+    , ((modm, xK_l), sendMessage $ N.Go N.R)
     , ((modm, xK_j), sendMessage $ N.Go N.L)
     , ((modm, xK_i), sendMessage $ N.Go N.U)
-    , ((modm, xK_m), sendMessage $ N.Go N.D)
-    , ((ms,   xK_k), sendMessage $ N.Swap N.R)
+    , ((modm, xK_k), sendMessage $ N.Go N.D)
+    , ((ms,   xK_l), sendMessage $ N.Swap N.R)
     , ((ms,   xK_j), sendMessage $ N.Swap N.L)
     , ((ms,   xK_i), sendMessage $ N.Swap N.U)
-    , ((ms,   xK_m), sendMessage $ N.Swap N.D)
+    , ((ms,   xK_k), sendMessage $ N.Swap N.D)
 
     -- Pull adjacent window to focused group
+    , ((ma, xK_l), sendMessage $ S.pullGroup R)
     , ((ma, xK_j), sendMessage $ S.pullGroup L)
-    , ((ma, xK_k), sendMessage $ S.pullGroup R)
     , ((ma, xK_i), sendMessage $ S.pullGroup U)
-    , ((ma, xK_m), sendMessage $ S.pullGroup D)
+    , ((ma, xK_k), sendMessage $ S.pullGroup D)
 
-    , ((modm, xK_o), withFocused (sendMessage . S.MergeAll))
     , ((ms,   xK_o), withFocused (sendMessage . S.UnMerge))
 
     -- Focus next/prev window on sublayout
@@ -106,22 +105,22 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     , ((modm, xK_Return), windows W.swapMaster)
 
     -- Swapthe focused window with the next window
-    -- , ((ms,xK_j), windows W.swapDown)
+    , ((ms,xK_period), windows W.swapDown)
 
     -- Swapthe focused window with the previous window
-    -- , ((ms,xK_k), windows W.swapUp)
+    , ((ms,xK_comma), windows W.swapUp)
 
     -- Shrink the master area
-    , ((modm, xK_h), sendMessage Shrink)
+    , ((modm, xK_n), sendMessage Shrink)
 
     -- Expand the master area
-    , ((modm, xK_l), sendMessage Expand)
+    , ((modm, xK_m), sendMessage Expand)
 
     -- Shrink the slave area alternate direction
-    , ((ms,   xK_h), sendMessage R.MirrorShrink)
+    , ((ms,   xK_n), sendMessage R.MirrorExpand)
 
     -- Expand the slave area alternate direction 
-    , ((ms,   xK_l), sendMessage R.MirrorExpand)
+    , ((ms,   xK_m), sendMessage R.MirrorShrink)
 
     -- Pushwindow back into tiling
     , ((modm, xK_t), withFocused $ windows . W.sink)
@@ -139,7 +138,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     , ((mod4Mask, xK_f), spawn "firefox -P -no-remote")
 
     -- Open latest C++ specification draft with evince
-    , ((ms, xK_n), spawn "evince ~/doc/c++/newer.pdf")
+    , ((modm, xK_semicolon), spawn "evince ~/doc/c++/newer.pdf")
 
     -- Copy primary selection to clipboard
     , ((modm, xK_c), spawn "xsel -o -p | xsel -i -b")
