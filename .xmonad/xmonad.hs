@@ -62,9 +62,6 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     -- launch dmenu
     , ((modm, xK_p), spawn "exe=`dmenu_path | dmenu` && eval \"exec $exe\"")
 
-    -- launch gmrun
-    -- , ((ms,xK_p), spawn "gmrun")
-
     -- close focused window
     , ((ms,xK_c), kill)
 
@@ -73,9 +70,6 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
 
     --  Reset the layouts on the current workspace to default
     , ((ms,xK_space), setLayout $ XMonad.layoutHook conf)
-
-    -- Resize viewed windows to the correct size
-    , ((modm, xK_n), refresh)
 
     -- Move focus to the next window
     , ((modm, xK_Tab), B.focusDown)
@@ -106,9 +100,6 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     , ((mod1Mask .|. shiftMask,  xK_Tab), S.onGroup W.focusUp')
     , ((mod1Mask, xK_Tab), S.onGroup W.focusDown')
     , ((ma, xK_space), S.toSubl NextLayout)
-
-    -- Movefocus to the master window
-    -- , ((modm, xK_m), windows W.focusMaster)
 
     -- Swapthe focused window and the master window
     , ((modm, xK_Return), windows W.swapMaster)
@@ -153,14 +144,6 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     , ((modm, xK_c), spawn "xsel -o -p | xsel -i -b")
 
     -- Show Clock
-    , ((modm, xK_d), spawn "zenity --info --text=\"`date`\"")
-
-    -- Toggle the status bar gap
-    -- Use this binding with avoidStruts from Hooks.ManageDocks.
-    -- See also the statusBar function from Hooks.DynamicLog.
-    --
-    -- , ((modm              , xK_b), sendMessage ToggleStruts)
-
     , ((modm, xK_d), spawn "zenity --info --text=\"`date`\"")
 
     -- Quitxmonad
