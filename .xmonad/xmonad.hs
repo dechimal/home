@@ -16,6 +16,7 @@ import Control.Applicative
 
 import qualified XMonad.StackSet as W
 import Data.Map(fromList)
+import Data.List(isInfixOf)
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks
 import XMonad.Util.Run(spawnPipe)
@@ -26,6 +27,9 @@ import qualified XMonad.Layout.BoringWindows as B
 import qualified XMonad.Layout.Drawer as D
 import qualified XMonad.Layout.PerWorkspace as PW
 import qualified XMonad.Layout.Magnifier as M
+import qualified XMonad.Layout.Grid as G
+import qualified XMonad.Layout.TwoPane as T
+import qualified XMonad.Layout.Combo as C
 
 import qualified XMonad.Util.WindowProperties as P
 
@@ -47,7 +51,7 @@ instance Applicative Query where
 --
 -- > workspaces = ["web", "irc", "code" ] ++ map show [4..9]
 --
-myWorkspaces = ["1","2","3","4","5","6","7","8","9"]
+myWorkspaces = ["1","gimp","im","4","5","6","7","8","9"]
 
 
 ------------------------------------------------------------------------
@@ -217,7 +221,8 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = fromList $
 --
 myLayout = nav
            $ B.boringWindows
-           $ gimpWS "2" 
+           $ msgWS "im"
+           $ gimpWS "gimp" 
            $ M.magnifiercz (1.1/1)
            $ S.subLayout []
                  (Full ||| tiled ||| mirrorTiled)
@@ -230,6 +235,11 @@ myLayout = nav
      gimpLayout = leftTiled $ rightTiled Full
      leftTiled = D.onLeft $ D.simpleDrawer 0.01 0.2 (P.Role "gimp-toolbox")
      rightTiled = D.onRight $ D.simpleDrawer 0.01 0.2 (P.Role "gimp-dock")
+
+     msgWS wsname = PW.onWorkspace wsname msgLayout
+     msgLayout = C.combineTwo (R.ResizableTall 2 delta (3/7) [])
+                              Full
+                              G.Grid
 
      -- WindowNavigation
      nav layout = N.configurableNavigation (N.navigateColor navColor) layout
@@ -269,7 +279,8 @@ myManageHook = composeAll
     -- , className =? "Gimp"           --> doFloat
     , resource  =? "desktop_window" --> doIgnore
     , resource  =? "kdesktop"       --> doIgnore
-    , resource  =? "zenity"         --> doFloat ]
+    , resource  =? "zenity"         --> doFloat 
+    , className >>= (return . ("Skype" `isInfixOf`)) --> doShift "im" ]
 
 ------------------------------------------------------------------------
 -- Event handling
@@ -343,7 +354,7 @@ defaults = defaultConfig {
 
       -- hooks, layouts
         layoutHook         = avoidStruts myLayout,
-        manageHook         = I.insertPosition I.Below I.Older <+> myManageHook,
+        manageHook         = myManageHook,
         handleEventHook    = myEventHook,
         logHook            = myLogHook,
         startupHook        = myStartupHook
