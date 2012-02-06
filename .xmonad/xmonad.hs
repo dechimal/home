@@ -26,6 +26,7 @@ import qualified XMonad.Layout.BoringWindows as B
 import qualified XMonad.Layout.Drawer as D
 import qualified XMonad.Layout.PerWorkspace as PW
 import qualified XMonad.Layout.Magnifier as M
+import qualified XMonad.Layout.Groups as G
 
 import qualified XMonad.Util.WindowProperties as P
 
@@ -79,28 +80,26 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     , ((ms,xK_space), setLayout $ XMonad.layoutHook conf)
 
     -- Move focus to the next window
-    , ((modm, xK_Tab), B.focusDown)
+    , ((modm, xK_Tab), B.focusUp)
 
     -- Move focus to the previous window
-    , ((ms, xK_Tab),   B.focusUp)
+    , ((ms, xK_Tab),   B.focusDown)
 
     -- Move fucus to the right/left/up/down window
     , ((modm, xK_l), sendMessage $ N.Go N.R)
     , ((modm, xK_j), sendMessage $ N.Go N.L)
     , ((modm, xK_i), sendMessage $ N.Go N.U)
     , ((modm, xK_k), sendMessage $ N.Go N.D)
-    , ((ms,   xK_l), sendMessage $ N.Swap N.R)
-    , ((ms,   xK_j), sendMessage $ N.Swap N.L)
-    , ((ms,   xK_i), sendMessage $ N.Swap N.U)
-    , ((ms,   xK_k), sendMessage $ N.Swap N.D)
+    , ((ms,   xK_l), sendMessage $ G.ToFocused $ SomeMessage $ N.Swap N.R)
+    , ((ms,   xK_j), sendMessage $ G.ToFocused $ SomeMessage $ N.Swap N.L)
+    , ((ms,   xK_i), sendMessage $ G.ToFocused $ SomeMessage $ N.Swap N.U)
+    , ((ms,   xK_k), sendMessage $ G.ToFocused $ SomeMessage $ N.Swap N.D)
 
     -- Pull adjacent window to focused group
-    , ((ma, xK_l), sendMessage $ S.pullGroup R)
-    , ((ma, xK_j), sendMessage $ S.pullGroup L)
-    , ((ma, xK_i), sendMessage $ S.pullGroup U)
-    , ((ma, xK_k), sendMessage $ S.pullGroup D)
+    , ((ma, xK_k), sendMessage $ G.Modify $ G.moveToGroupUp True)
+    , ((ma, xK_j), sendMessage $ G.Modify $ G.moveToGroupDown True)
 
-    , ((ms,   xK_o), withFocused (sendMessage . S.UnMerge))
+    , ((ms, xK_o), sendMessage $ G.Modify G.moveToNewGroupUp)
 
     -- Focus next/prev window on sublayout
     , ((mod1Mask .|. shiftMask,  xK_Tab), S.onGroup W.focusUp')
@@ -215,12 +214,13 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = fromList $
 -- The available layouts.  Note that each layout is separated by |||,
 -- which denotes layout choice.
 --
-myLayout = M.magnifiercz (1.1/1)
-           $ nav
+myLayout = nav
            $ B.boringWindows
-           $ S.subLayout []
+           $ gimpWS "2"
+           $ M.magnifiercz (1.1/1)
+           $ G.group
                  (Full ||| tiled ||| mirrorTiled)
-                 $ gimpWS "2" (tiled ||| mirrorTiled)
+                 $ (tiled ||| mirrorTiled)
   where
      -- default tiling algorithm partitions the screen into two panes
      tiled = R.ResizableTall nmaster delta ratio []
