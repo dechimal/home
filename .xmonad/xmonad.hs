@@ -28,8 +28,8 @@ import qualified XMonad.Layout.Drawer as D
 import qualified XMonad.Layout.PerWorkspace as PW
 import qualified XMonad.Layout.Magnifier as M
 import qualified XMonad.Layout.Grid as G
-import qualified XMonad.Layout.TwoPane as T
-import qualified XMonad.Layout.Combo as C
+import qualified XMonad.Layout.Master as A
+import qualified XMonad.Layout.Tabbed as Tab
 
 import qualified XMonad.Util.WindowProperties as P
 
@@ -236,10 +236,13 @@ myLayout = nav
      leftTiled = D.onLeft $ D.simpleDrawer 0.01 0.2 (P.Role "gimp-toolbox")
      rightTiled = D.onRight $ D.simpleDrawer 0.01 0.2 (P.Role "gimp-dock")
 
+     -- Layout modifier for Skype
      msgWS wsname = PW.onWorkspace wsname msgLayout
-     msgLayout = C.combineTwo (R.ResizableTall 2 delta (3/7) [])
-                              Full
-                              G.Grid
+     msgLayout = A.mastered delta msgRatio
+                 (M.magnifiercz msgZoomDelta G.Grid ||| Tab.tabbed Tab.shrinkText theme)
+     msgRatio = 2/8
+     msgZoomDelta = 1.2/1
+     theme = Tab.defaultTheme
 
      -- WindowNavigation
      nav layout = N.configurableNavigation (N.navigateColor navColor) layout
@@ -280,7 +283,7 @@ myManageHook = composeAll
     , resource  =? "desktop_window" --> doIgnore
     , resource  =? "kdesktop"       --> doIgnore
     , resource  =? "zenity"         --> doFloat 
-    , className >>= (return . ("Skype" `isInfixOf`)) --> doShift "im" ]
+    , ("Skype" `isInfixOf`) <$> className --> (I.insertPosition I.End I.Older <+> doShift "im") ]
 
 ------------------------------------------------------------------------
 -- Event handling
