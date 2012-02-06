@@ -226,15 +226,20 @@ myLayout = nav
            $ M.magnifiercz (1.1/1)
            $ S.subLayout []
                  (Full ||| tiled ||| mirrorTiled)
-                 $ (tiled ||| mirrorTiled)
+                 (tiled ||| mirrorTiled)
   where
      -- default tiling algorithm partitions the screen into two panes
      tiled = R.ResizableTall nmaster delta ratio []
      mirrorTiled = Mirror $ R.ResizableTall nmaster mirrorDelta mirrorRatio []
+
+     -- Layout modifier for GIMP
      gimpWS wsname = PW.onWorkspace wsname gimpLayout
      gimpLayout = leftTiled $ rightTiled Full
-     leftTiled = D.onLeft $ D.simpleDrawer 0.01 0.2 (P.Role "gimp-toolbox")
-     rightTiled = D.onRight $ D.simpleDrawer 0.01 0.2 (P.Role "gimp-dock")
+     leftTiled = D.onLeft $ dock $ P.Role "gimp-toolbox"
+     rightTiled = D.onRight $ dock $ P.Role "gimp-dock"
+     dock prop = D.simpleDrawer closedRatio openRatio prop
+     closedRatio = 0.01
+     openRatio = 0.2
 
      -- Layout modifier for Skype
      msgWS wsname = PW.onWorkspace wsname msgLayout
