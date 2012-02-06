@@ -215,12 +215,13 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = fromList $
 -- The available layouts.  Note that each layout is separated by |||,
 -- which denotes layout choice.
 --
-myLayout = M.magnifiercz (1.1/1)
-           $ nav
+myLayout = nav
            $ B.boringWindows
+           $ gimpWS "2" 
+           $ M.magnifiercz (1.1/1)
            $ S.subLayout []
                  (Full ||| tiled ||| mirrorTiled)
-                 $ gimpWS "2" (tiled ||| mirrorTiled)
+                 $ (tiled ||| mirrorTiled)
   where
      -- default tiling algorithm partitions the screen into two panes
      tiled = R.ResizableTall nmaster delta ratio []
