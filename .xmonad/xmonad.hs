@@ -245,7 +245,7 @@ myLayout = nav
      msgWS wsname = PW.onWorkspace wsname msgLayout
      msgLayout = A.mastered delta msgRatio
                  (M.magnifiercz msgZoomDelta G.Grid ||| Tab.tabbed Tab.shrinkText theme)
-     msgRatio = 2/8
+     msgRatio = 1/6
      msgZoomDelta = 1.2/1
      theme = Tab.defaultTheme
 
@@ -288,7 +288,7 @@ myManageHook = composeAll
     , resource  =? "desktop_window" --> doIgnore
     , resource  =? "kdesktop"       --> doIgnore
     , resource  =? "zenity"         --> doFloat 
-    , ("Skype" `isInfixOf`) <$> className --> (I.insertPosition I.End I.Older <+> doShift "im") ]
+    , (flip any (isInfixOf <$> ["Skype", "Iptux"]) . flip ($)) <$> className --> (I.insertPosition I.End I.Older <+> doShift "im") ]
 
 ------------------------------------------------------------------------
 -- Event handling
