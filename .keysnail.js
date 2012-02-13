@@ -554,3 +554,12 @@ key.setCaretKey('M', function (ev, arg) {
 key.setCaretKey(';', function (ev, arg) {
     ext.exec("hok-start-extended-mode", arg);
 }, 'Hit a Hint を拡張モードで開始', true);
+
+key.setViewKey('C-j', function() {},
+               '何もしない', true);
+key.setViewKey('C-k', function() {},
+               '何もしない', true);
+key.setCaretKey('C-j', function() {},
+                '何もしない', true);
+key.setCaretKey('C-k', function() {},
+                '何もしない', true);
