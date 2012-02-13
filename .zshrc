@@ -4,11 +4,14 @@ HISTSIZE=100000
 SAVEHIST=100000
 bindkey -e
 # End of lines configured by zsh-newuser-install
+
+typeset -U fpath path
+
 # The following lines were added by compinstall
 zstyle :compinstall filename '/home/d/.zshrc'
 
 # add fpath for local defined completions
-grep -q ~/.zsh.d <<<"$fpath" || fpath=(~/.zsh.d $fpath)
+fpath=(~/.zsh.d $fpath)
 
 autoload -Uz compinit
 compinit
@@ -18,7 +21,7 @@ compinit
 [[ -n $SSH_AGENT_PID ]] && launcher=\*
 
 PS1="$launcher%n %(4c;...;)%3~$ssh%# "
-grep $HOME/progs/bin -q <<<"$path" || path=($HOME/progs/bin $path)
+path=($HOME/progs/bin $path)
 
 LOVELIVE=(高坂穂乃果 絢瀬絵里 南ことり 園田海未 星空凛 西木野真姫 東條希 小泉花陽 矢澤にこ)
 
