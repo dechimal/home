@@ -3,82 +3,21 @@
 prefix=$HOME/progs
 pkgnames=(gcc clang)
 
-source-gcc() {
-    if [[ -d .git ]]; then
-        git fetch --depth=1
-        git reset --hard origin/master
-    else
-        git clone --depth=1 git://gcc.gnu.org/git/gcc.git .
-    fi
-}
-
-build-gcc() {
-    $srcdir/configure --prefix=$prefix --program-suffix=-trunk \
-        --disable-multilib --enable-languages=c,c++ --enable-shared --enable-threads=posix \
-        --disable-bootstrap --enable-__cxa_atexit --enable-lto --enable-cloog-backend=ppl \
-        --enable-version-specific-runtime-libs &&
-    make -j4 &&
-    make check &&
-    make DESTDIR=$distdir install
-}
-
-source-clang() {
-    if [[ -d .git ]]; then
-        git fetch --depth=1
-        git reset --hard origin/master
-        cd tools/clang
-        git fetch --depth=1
-        git reset --hard origin/master
-    else
-        git clone --depth=1 http://llvm.org/git/llvm.git .
-        cd tools/clang
-        git reset --hard HEAD
-        git clone --depth=1 http://llvm.org/git/clang.git
-    fi
-}
-
-build-clang() {
-    mkdir bin
-    ln -s /usr/bin/python2 bin/python
-    PATH=$PWD/bin:$PATH
-    LANG=C g++-trunk -fsyntax-only -xc++ -v - <<<'' 2>&1 | \
-        sed -r '/^#include </,/End of search/{/^(#include|End of)/d;s/^ //;p;};d' | \
-        sed '\,/usr/local/include,d' >searchdirs
-    # sed ',FIXME: temporary hack: hard-coded paths,r searchdirs' $srcdir/tools/clang/lib/Frontend/InitHeaderSearch.cpp
-    CC=gcc-trunk CXX=g++-trunk CPP=cpp-trunk \
-        $srcdir/configure --prefix=$prefix --program-suffix=-trunk \
-        --docdir=$HOME/progs/share/llvm/doc --with-cxx-include-root=`sed '/c++$/p;d' searchdirs` &&
-    make CC=gcc-trunk CXX=g++-trunk CPP=cpp-trunk -j4 &&
-    make check &&
-    make DESTDIR=$distdir install
-}
-
-source-boost() {
-    if [ -d .git ]; then
-        git pull
-    else
-        git clone git://github.com/ryppl/boost-svn.git .
-    fi
-}
-
-build-boost() {
-}
-
 update-package() {
     # update source
     mkdir -p src
-    (cd src; source-$pkgname)
+    export srcdir=`pwd`/src
+    export distdir=`pwd`/src
+    (cd src; src)
     # build
     rm -rf dist build
     mkdir build
-    (export srcdir=$PWD/src distdir=$PWD/dist
-     cd build
-     build-$pkgname) &&
+    (cd build; build) &&
     # record package files
     find dist -not -type d -a -printf '/%P\n' >>pkgfiles.new &&
     # remove old package files
     touch pkgfiles &&
-    xargs -i rm {} <pkgfiles &&
+    xargs rm -r {} <pkgfiles &&
     # install package
     cp -r dist/* / &&
     # update pkgfiles
@@ -86,8 +25,8 @@ update-package() {
 }
 
 for i in $pkgnames; do
-    mkdir -p $i;
+    mkdir -p $i
     (cd $i
-     export pkgname=$i
-     update-package $i)
+     source .localbuild
+     pkgname=$i update-package)
 done

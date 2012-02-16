@@ -1,0 +1,19 @@
+# -*- sh -*-
+src() {
+    if [[ -d .git ]]; then
+        git fetch
+        git reset --hard origin/master
+    else
+        git clone git://gcc.gnu.org/git/gcc.git .
+    fi
+}
+
+build() {
+    $srcdir/configure --prefix=$prefix --program-suffix=-trunk \
+        --disable-multilib --enable-languages=c,c++ --enable-shared --enable-threads=posix \
+        --disable-bootstrap --enable-__cxa_atexit --enable-lto --enable-cloog-backend=ppl \
+        --enable-version-specific-runtime-libs &&
+    make -j4 &&
+    make check &&
+    make DESTDIR=$distdir install
+}

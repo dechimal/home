@@ -1,0 +1,42 @@
+# -*- sh -*-
+src() {
+    if [[ -d .git ]]; then
+        git fetch
+        git reset --hard origin/master
+    else
+        git clone --depth=1 http://llvm.org/git/llvm.git .
+    fi
+
+    cd tools
+    if [[ -d clang ]]; then
+        cd clang
+        git fetch
+        git reset --hard origin/master
+    else
+        git clone --depth=1 http://llvm.org/git/clang.git
+    fi
+
+    cd $srcdir/projects
+    if [[ -d compiler-rt.git ]]; then
+        git fetch
+        git reset --hard origin/master
+    else
+        git clone --depth=1 http://llvm.org/git/compiler-rt.git
+    fi
+}
+
+build() {
+    mkdir bin
+    ln -s /usr/bin/python2 bin/python
+    PATH=$PWD/bin:$PATH
+    LANG=C g++-trunk -fsyntax-only -xc++ -v - <<<'' 2>&1 | \
+        sed -r '/^#include </,/End of search/{/^(#include|End of)/d;s/^ //;p;};d' | \
+        sed '\,/usr/local/include,d' >searchdirs
+    # sed ',FIXME: temporary hack: hard-coded paths,r searchdirs' $srcdir/tools/clang/lib/Frontend/InitHeaderSearch.cpp
+    CC=gcc-trunk CXX=g++-trunk CPP=cpp-trunk \
+        $srcdir/configure --prefix=$prefix --program-suffix=-trunk \
+        --docdir=$HOME/progs/share/llvm/doc --with-cxx-include-root=`sed '/c++$/p;d' searchdirs` &&
+    make CC=gcc-trunk CXX=g++-trunk CPP=cpp-trunk -j4 &&
+    make check &&
+    make DESTDIR=$distdir install
+}
