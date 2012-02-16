@@ -134,8 +134,10 @@
 ; 範囲をコメント化/非コメント化
 (global-set-key [(control c)(control /)] 'comment-or-uncomment-region)
 
-; term mode
-(require 'term)
+; multi-term
+(require 'multi-term)
+(setq system-uses-terminfo nil)
+
 (defun term-mode-switch ()
   (interactive)
   (if (term-in-char-mode)
@@ -143,19 +145,15 @@
     (if (term-in-line-mode)
         (term-char-mode))))
 
+(setq multi-term-program "/bin/zsh")
+(setq multi-term-buffer-name "term")
+(add-to-list 'term-unbind-key-list "M-x")
+
 (add-hook 'term-mode-hook
   '(lambda ()
-     (define-key term-mode-map "\C-c\C-l" 'term-mode-switch)
-     (define-key term-raw-map "\C-v" 'scroll-up)
-     (define-key term-raw-map "\M-v" 'scroll-down)
-     (define-key term-raw-map "\C-x" ctl-x-map)
-     (define-key term-raw-map "\M-x" 'execute-extended-command)))
-
-; termで複数ターミナルを開けるようにする
-(defadvice term (after after-advice-term-rename activate)
-  (save-excursion
-    (define-key term-raw-map "\C-c\C-l" 'term-mode-switch)
-    (rename-buffer "term" t)))
+     (define-key term-raw-map (kbd "C-h") 'term-send-backspace)
+     (define-key term-raw-map (kbd "C-y") 'term-paste)
+     (define-key term-raw-map "\C-c\C-l" 'term-mode-switch)))
 
 ; haskell-mode-hook
 (require 'haskell-mode)
