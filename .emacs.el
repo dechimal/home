@@ -129,12 +129,13 @@
                              (repeat-kbd-macro-mode)
                              (call-last-kbd-macro)))
 
+; いらんし打ち間違えたらうざいので削除
 (global-unset-key "\C-o")
 
 ; 範囲をコメント化/非コメント化
 (global-set-key [(control c)(control /)] 'comment-or-uncomment-region)
 
-; multi-term
+; terminal
 (require 'multi-term)
 (setq system-uses-terminfo nil)
 
@@ -149,11 +150,46 @@
 (setq multi-term-buffer-name "term")
 (add-to-list 'term-unbind-key-list "M-x")
 
+(defun backward-kill-word-with-term ()
+  (interactive)
+  (save-excursion
+    (let ((begin (point)))
+      (backward-word)
+      (kill-ring-save begin (point))))
+  (term-send-backward-kill-word))
+
+(defun kill-word-with-term ()
+  (interactive)
+  (save-excursion
+    (let ((begin (point)))
+      (forward-word)
+      (kill-ring-save begin (point))))
+  (term-send-forward-kill-word))
+
+(defun kill-line-with-term ()
+  (interactive)
+  (save-excursion
+    (let ((begin (point)))
+      (move-end-of-line 1)
+      (kill-ring-save begin (point))))
+  (term-send-raw-string "\C-k"))
+
+(defun undo-with-term ()
+  (interactive)
+  (term-send-raw-string "\C-_"))
+
+(global-set-key "\C-xt" 'multi-term)
+
 (add-hook 'term-mode-hook
-  '(lambda ()
-     (define-key term-raw-map (kbd "C-h") 'term-send-backspace)
-     (define-key term-raw-map (kbd "C-y") 'term-paste)
-     (define-key term-raw-map "\C-c\C-l" 'term-mode-switch)))
+  '(lambda term-mode-hook-fun ()
+     (define-key term-mode-map "\C-c\C-l" 'term-mode-switch)
+     (define-key term-raw-map "\C-c\C-l" 'term-mode-switch)
+     (define-key term-raw-map [(meta backspace)] 'backward-kill-word-with-term)
+     (define-key term-raw-map [(control backspace)] 'backward-kill-word-with-term)
+     (define-key term-raw-map "\M-d" 'kill-word-with-term)
+     (define-key term-raw-map "\C-k" 'kill-line-with-term)
+     (define-key term-raw-map [(control /)] 'undo-with-term)
+     (define-key term-raw-map "\C-y" 'term-paste)))
 
 ; haskell-mode-hook
 (require 'haskell-mode)
