@@ -1,8 +1,8 @@
 <UserScriptConfig>
-	<Script filename="click.user.js" name="click" namespace="http://lovelang.heroku.com/" description="" version="" enabled="true" runAt="document-end" basedir="click" modified="1328853100000" dependhash="da39a3ee5e6b4b0d3255bfef95601890afd80709" checkRemoteUpdates="true" updateAvailable="false" lastUpdateCheck="1318692660000">
+	<Script basedir="click" checkRemoteUpdates="true" dependhash="da39a3ee5e6b4b0d3255bfef95601890afd80709" description="" enabled="true" filename="click.user.js" installTime="1329096579482" lastUpdateCheck="1318692660000" modified="1328853100000" name="click" namespace="http://lovelang.heroku.com/" runAt="document-end" updateAvailable="false" version="">
 		<Include>http://lovelang.heroku.com/</Include>
 	</Script>
-	<Script filename="disable_twitter_keys.user.js" name="disable twitter keys" namespace="https://twitter.com/" description="" version="" enabled="true" runAt="document-end" basedir="disable_twitter_keys" modified="1328854831000" dependhash="da39a3ee5e6b4b0d3255bfef95601890afd80709" checkRemoteUpdates="true" updateAvailable="false" lastUpdateCheck="1328807172000">
+	<Script basedir="disable_twitter_keys" checkRemoteUpdates="true" dependhash="da39a3ee5e6b4b0d3255bfef95601890afd80709" description="" enabled="true" filename="disable_twitter_keys.user.js" installTime="1329096579483" lastUpdateCheck="1328807172000" modified="1328854831000" name="disable twitter keys" namespace="https://twitter.com/" runAt="document-end" updateAvailable="false" version="">
 		<Include>http://twitter.com/*</Include>
 		<Include>https://twitter.com/*</Include>
 	</Script>
