@@ -5,4 +5,4 @@
 // @include        https://twitter.com/*
 // ==/UserScript==
 
-window.setTimeout("$(document).unbind('keydown')", 1000);
+window.setInterval("$(document).off('keydown')", 1000);
