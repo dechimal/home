@@ -150,6 +150,8 @@
 (setq multi-term-buffer-name "term")
 (add-to-list 'term-unbind-key-list "M-x")
 
+;; term-modeでterminalのkill-ringを変更する際emacs側のも変更する
+
 (defun backward-kill-word-with-term ()
   (interactive)
   (save-excursion
@@ -258,3 +260,6 @@
 
 ;; read only で開いたファイルはless風に操作する
 (require 'less)
+
+;; omake mode
+(require 'omake-mode)
