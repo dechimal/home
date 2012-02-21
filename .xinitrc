@@ -24,7 +24,7 @@ if [ -f "$userresources" ]; then
 fi
 
 if [ -f "$usermodmap" ]; then
-     xmodmap "$usermodmap"
+    xmodmap "$usermodmap"
 fi
 
 # set default cursor (this command call after to merge xresources)
@@ -33,6 +33,11 @@ xsetroot -cursor_name left_ptr
 # set wallpaper
 if [ -f $wallpaper ]; then
     hsetroot -center $wallpaper
+fi
+
+# include local settings
+if [ -f ~/.xinitrc.local ]; then
+    source ~/.xinitrc.local
 fi
 
 # set im
