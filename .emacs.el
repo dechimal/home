@@ -255,3 +255,6 @@
 (setq ac-auto-start nil)
 (setq ac-trigger-commands (append (list 'delete-char 'backward-char) ac-trigger-commands))
 ; (setq clang-executable "/usr/bin/clang++")
+
+;; read only で開いたファイルはless風に操作する
+(require 'less)
