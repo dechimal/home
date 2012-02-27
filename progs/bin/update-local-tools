@@ -1,7 +1,17 @@
 #!/bin/zsh
 
-prefix=$HOME/progs
-pkgnames=(gcc clang)
+if [[ -f ~/.massbuild ]]; then
+    source ~/.massbuild
+fi
+if [[ -f .massbuild ]]; then
+    source .massbuild
+fi
+if [[ $# -gt 0 ]]; then
+    pkgnames=($*)
+fi
+
+[[ ${pkgnames:+1} == 1 ]] || echo error: specify pkgnames 1>&2 && exit
+[[ ${prefix:+1} == 1 ]] || echo error: specify prefix 1>&2 && exit
 
 update-package() {
     # update source
