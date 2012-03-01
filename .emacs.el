@@ -183,7 +183,7 @@
 (global-set-key "\C-xt" 'multi-term)
 
 (add-hook 'term-mode-hook
-  '(lambda term-mode-hook-fun ()
+  '(lambda ()
      (define-key term-mode-map "\C-c\C-l" 'term-mode-switch)
      (define-key term-raw-map "\C-c\C-l" 'term-mode-switch)
      (define-key term-raw-map [(meta backspace)] 'backward-kill-word-with-term)
