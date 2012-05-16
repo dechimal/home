@@ -129,8 +129,11 @@
                              (repeat-kbd-macro-mode)
                              (call-last-kbd-macro)))
 
-; いらんし打ち間違えたらうざいので削除
-(global-unset-key "\C-o")
+; ウィンドウ切り替えを変更
+(global-set-key "\C-o" 'other-window)
+(global-set-key [(control shift o)] '(lambda ()
+                                       (interactive)
+                                       (other-window -1)))
 
 ; 範囲をコメント化/非コメント化
 (global-set-key [(control c)(control /)] 'comment-or-uncomment-region)
@@ -263,3 +266,6 @@
 
 ;; omake mode
 (require 'omake-mode)
+
+;; kill smart indentation
+(setq c-syntactic-indentation nil)

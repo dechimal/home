@@ -17,10 +17,31 @@ autoload -Uz compinit
 compinit
 # End of lines added by compinstall
 
-[[ -n $SSH_CLIENT ]] && ssh=' |'`sed -r 's/ .*//;' <<<$SSH_CLIENT`
-[[ -n $SSH_AGENT_PID ]] && launcher=\*
+setopt promptsubst
+git-info() {
+  local branch=$(git branch 2>/dev/null | sed '/*/s/* //p;d')
+  local gitdir=`pwd`
+  until [[ -d $gitdir/.git || `(cd $gitdir; pwd)` == / ]]; do
+    gitdir=$gitdir/..
+  done
+  if [[ -d $gitdir/.git/rebase-merge ]]; then
+    local color_start=$'\\x1b[31m'
+    local color_end=$'\\x1b[0m'
+    local rebasing_message='! '
+  fi
+  if [[ -n $branch ]]; then
+    echo -n \ $color_start\[$rebasing_message$branch\]$color_end
+  fi
+}
 
-PS1="$launcher%n %(4c;...;)%3~$ssh%# "
+function {
+  [[ -n $SSH_CLIENT ]] && local ssh=' |'`sed -r 's/ .*//;' <<<$SSH_CLIENT`
+  [[ -n $SSH_AGENT_PID ]] && local launcher=\*
+
+  PS1=$launcher'$(users)$(git-info) $(pwd | sed -r "s,^$HOME,~,;s,.*/(.*/.*/.*)$,...\1,")'$ssh'%% '
+}
+# PS1="$launcher%n %(4c;...;)%3~$ssh%# "
+
 path=($HOME/progs/bin $path)
 
 LOVELIVE=(高坂穂乃果 絢瀬絵里 南ことり 園田海未 星空凛 西木野真姫 東條希 小泉花陽 矢澤にこ)
