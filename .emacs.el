@@ -44,6 +44,9 @@
 ; 行間設定
 (setq-default line-spacing 0)
 
+;; スマートインデントを殺す
+(setq c-syntactic-indentation nil)
+
 ;; c mode hook
 (add-hook 'c++-mode-hook
   '(lambda ()
@@ -74,6 +77,7 @@
         '(("\\.py$" . python-mode)
 	  ("\\.hpp$" . c++-mode)
           ("\\.h$" . c++-mode)
+          ("\\.cs$" . c++-mode)
           ("\\.hs$" . haskell-mode))
         auto-mode-alist))
 

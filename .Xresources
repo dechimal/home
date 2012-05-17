@@ -20,6 +20,7 @@
 
 !Mouse cursor
 Xcursor.theme: Vanilla-DMZ-AA
+Xcursor.size: 16
 
 !emacs
 emacs.UseXIM: none

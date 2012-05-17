@@ -5,6 +5,8 @@ usermodmap=$HOME/.Xmodmap
 sysresources=/etc/X11/xinit/.Xresources
 sysmodmap=/etc/X11/xinit/.Xmodmap
 wallpaper=$HOME/.wallpaper
+prehook=$HOME/.xinitrc.d/pre
+posthook=$HOME/.xinitrc.d/post
 
 # change keyboard layout
 setxkbmap -layout jp
@@ -36,9 +38,13 @@ if [ -f $wallpaper ]; then
 fi
 
 # include local settings
-if [ -f ~/.xinitrc.local ]; then
-    source ~/.xinitrc.local
+if [ -f $prehook ]; then
+    source $prehook
 fi
+
+export SKKSERVER=localhost
+export LANG=ja_JP.UTF-8
+export LC_CTYPE=ja_JP.UTF-8
 
 # set im
 export GTK_IM_MODULE=uim
@@ -49,15 +55,20 @@ uim-xim &
 
 [[ ~/.xmonad/xmonad.o -ot ~/.xmonad/xmonad.hs ]] && xmonad --recompile
 
-SKKSERVER=localhost
-LANG=ja_JP.UTF-8
-LC_CTYPE=ja_JP.UTF-8
-
 # run xcompmgr for window transparency
 xcompmgr &
 
+post() {
+sleep 1
+if [[ -f $posthook ]]; then
+    source $posthook
+fi
+}
+
+post &
+
 cd $HOME
-exec xmonad
+xmonad
 
 # xclock -geometry 50x50-1+1 &
 # xterm -geometry 80x50+494+51 &

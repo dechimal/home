@@ -57,6 +57,7 @@ alias semacs='sudo emacs -u d -nw'
 alias ldcrontab='crontab ~/.crontab'
 alias updatecrontab='perl -i -nle '\''s/(\d+)(-\w+)\s*$/($1+1).$2/e; print;'\'' ~/.crontab'
 alias xlock='xlock -mode blank'
+alias ll='ls -l'
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
 export EDITOR=emacs${WINDOWID:+client}
