@@ -19,22 +19,21 @@ compinit
 
 setopt promptsubst
 git-info() {
-  local branch=$(git branch 2>/dev/null | sed '/*/s/* //p;d')
-  local gitdir=`pwd`
-  until [[ -d $gitdir/.git || `(cd $gitdir; pwd)` == / ]]; do
-    gitdir=$gitdir/..
-  done
-  if [[ -d $gitdir/.git/rebase-merge ]]; then
-    local color_start=$'\\x1b[31m'
-    local color_end=$'\\x1b[0m'
-    local rebasing_message='! '
+  local branch gitdir color_start color_end rebasing_marker
+  branch=$(git branch 2>/dev/null | sed '/^*/s/^* //p;d')
+  gitdir=$(git rev-parse --git-dir 2>/dev/null)
+  if [[ -d $gitdir/rebase-merge ]]; then
+    color_start=$'\\x1b[31m'
+    color_end=$'\\x1b[0m'
+    rebasing_marker='! '
   fi
   if [[ -n $branch ]]; then
-    echo -n \ $color_start\[$rebasing_message$branch\]$color_end
+    echo -n \ $color_start\[$rebasing_marker$branch\]$color_end
   fi
 }
 
 function {
+  local ssh launcher
   [[ -n $SSH_CLIENT ]] && local ssh=' |'`sed -r 's/ .*//;' <<<$SSH_CLIENT`
   [[ -n $SSH_AGENT_PID ]] && local launcher=\*
 

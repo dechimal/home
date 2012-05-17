@@ -270,6 +270,3 @@
 
 ;; omake mode
 (require 'omake-mode)
-
-;; kill smart indentation
-(setq c-syntactic-indentation nil)
