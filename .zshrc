@@ -34,8 +34,8 @@ git-info() {
 
 function {
   local ssh launcher
-  [[ -n $SSH_CLIENT ]] && local ssh=' |'`sed -r 's/ .*//;' <<<$SSH_CLIENT`
-  [[ -n $SSH_AGENT_PID ]] && local launcher=\*
+  [[ -n $SSH_CLIENT ]] && ssh=' |'`sed -r 's/ .*//;' <<<$SSH_CLIENT`
+  [[ -n $SSH_AGENT_PID ]] && launcher=\*
 
   PS1=$launcher'$(users)$(git-info) $(pwd | sed -r "s,^$HOME,~,;s,.*/(.*/.*/.*)$,...\1,")'$ssh'%% '
 }
