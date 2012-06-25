@@ -168,6 +168,10 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
 
     -- Restart xmonad
     , ((modm, xK_q), spawn "xmonad --recompile && xmonad --restart")
+      
+    -- Control sound volume
+    , ((modm, xK_F11), spawn "amixer -q sset Headphone 5%-")
+    , ((modm, xK_F12), spawn "amixer -q sset Headphone 5%+")
     ]
     ++
 
