@@ -29,12 +29,13 @@
     (set-face-background 'region "Blue")
     (set-face-foreground 'font-lock-comment-face "green1")
     (set-face-foreground 'font-lock-variable-name-face nil)
+    (set-face-foreground 'font-lock-constant-face "#44ffbb")
     (set-face-foreground 'font-lock-string-face "chocolate1")
     (set-face-foreground 'font-lock-keyword-face "yellow2")
     (set-face-foreground 'font-lock-function-name-face nil)
     (set-face-foreground 'font-lock-builtin-face "yellow2")
     (set-face-foreground 'font-lock-preprocessor-face "#ff66ff")
-    (set-face-foreground 'font-lock-type-face "gold")
+    (set-face-foreground 'font-lock-type-face "#ffdd44")
     (set-cursor-color "#ffccdd")
 
     (set-fontset-font (frame-parameter nil 'font) '(#x80 . #x7ffff) "Migu 2M-10" nil)
@@ -60,7 +61,35 @@
      (define-key c++-mode-map "\C-m" 'newline-and-indent)
      (define-key c++-mode-map "\C-c\C-c" nil)
      (define-key c++-mode-map "\C-c\C-a" nil)
-     (c-toggle-electric-state t)))
+     ;; add C++11's keywords to keyword list
+     (setq font-lock-keywords
+           (append
+            '(("\\<\\(alignof\\|alignas\\|constexpr\\|decltype\\|export\\|final\\|noexcept\\|override\\|static_assert\\|thread_local\\)\\>" . 'font-lock-keyword-face)
+              ("\\<\\(nullptr\\|\\(-?[[:digit:]]+\\(\\.[[:digit:]]+\\(e[+-]?[[:digit:]]+\\)?\\)?\\|0x[[:xdigit:]]+\\)\\([[:alpha:]_][[:alnum:]_]*\\)?\\)\\>" . 'font-lock-constant-face)
+              ("\\<\\\(char\\(16\\|32\\)_t\\)\>" . 'font-lock-builtin-face)
+              ("\\<\\(and\\|and_eq\\|bitand\\|bitor\\|compl\\|not\\|not_eq\\|or\\|or_eq\\|xor\\|xor_eq\\)\\>" . 'font-lock-keywords-face))
+            (c++-font-lock-keywords-2))
+     (c-toggle-electric-state t))))
+
+;; kill smart indentation
+(setq c-syntactic-indentation nil)
+
+(setq-default deepen-function (lambda (point)
+                                (insert "    ")))
+(setq-default shallow-function (lambda (point)
+                                 (re-search-forward "^\\(    \\|\\t\\)" point)
+                                 (delete-region (match-beginning) (match-end))))
+
+(defun deepen-region (begin end &optional arg)
+  (save-excursion
+    (goto-char (region-beginning))
+    (beginning-of-line)
+    (while (<= (point) (1- (region-end)))
+      (dotimes (i arg)
+        (if (< arg 0)
+            (funcall deepen-function (point))
+          (funcall shallow-function (point)))
+        (forward-line)))))
 
 (add-hook 'java-mode-hook
   '(lambda ()
@@ -98,7 +127,6 @@
 (global-set-key "\C-\\" 'redo)
 
 ; C-tab とか C-S-tab でバッファ切り替え
-
 (setq enable-other-buffer-select nil)
 (defun other-buffer-select
   (interactive)
