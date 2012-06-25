@@ -17,12 +17,14 @@ autoload -Uz compinit
 compinit
 # End of lines added by compinstall
 
+setopt hist_ignore_dups
+
 setopt promptsubst
 git-info() {
   local branch gitdir color_start color_end rebasing_marker
   branch=$(git branch 2>/dev/null | sed '/^*/s/^* //p;d')
   gitdir=$(git rev-parse --git-dir 2>/dev/null)
-  if [[ -d $gitdir/rebase-merge ]]; then
+  if [[ -d $gitdir/rebase-merge || -d $gitdir/rebase-apply ]]; then
     color_start=$'\\x1b[31m'
     color_end=$'\\x1b[0m'
     rebasing_marker='! '
