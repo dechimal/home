@@ -1,0 +1,31 @@
+#!/bin/zsh
+
+fin() {
+  rm -rf $dir
+}
+TRAPINT() { fin }
+TRAPKILL() { fin }
+
+dir=`mktemp -dt auto-minimize.XXXXXXXXXX`
+export TMPDIR=$dir
+tmp=$dir/src.ii
+script=$dir/check.sh
+src=$1
+msg=$2
+
+cat <<EOF >$script
+g++ -std=gnu++0x -O0 -Wfatal-errors -w -S "$tmp" 2>&1 | grep -q "$msg"
+EOF
+
+chmod 755 $script
+
+cp $src $tmp
+
+for i in {0..10}; do
+  multidelta -level=$i $script $tmp <<EOF
+EOF
+done
+
+cp $tmp $src.result
+
+fin
