@@ -39,7 +39,7 @@ function {
   [[ -n $SSH_CLIENT ]] && ssh=' |'`sed -r 's/ .*//;' <<<$SSH_CLIENT`
   [[ -n $SSH_AGENT_PID ]] && launcher=\*
 
-  PS1=$launcher'$(users)$(git-info) $(pwd | sed -r "s,^$HOME,~,;s,.*/(.*/.*/.*)$,...\1,")'$ssh'%% '
+  PS1=$launcher'$(whoami)$(git-info) $(pwd | sed -r "s,^$HOME,~,;s,.*/(.*/.*/.*)$,...\1,")'$ssh'%% '
 }
 # PS1="$launcher%n %(4c;...;)%3~$ssh%# "
 
