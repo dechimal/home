@@ -33,3 +33,7 @@ URxvt.font:xft:Dejavu Sans Mono-9:rgba=rgb:hintslight,[codeset=ISO10646]xft:Migu
 URxvt.letterSpace:-1
 URxvt.saveLines:1024
 URxvt.scrollBar:false
+URxvt.scrollTtyOutput:false
+URxvt.scrollTtyKeypress:true
+URxvt.scrollWithBuffer:true
+URxvt.iso14755:false
