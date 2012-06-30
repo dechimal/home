@@ -30,7 +30,7 @@ git-info() {
     rebasing_marker='! '
   fi
   if [[ -n $branch ]]; then
-    echo -n \ $color_start\[$rebasing_marker$branch\]$color_end
+    echo -n \ $color_start\[$rebasing_sign$branch\]$color_end
   fi
 }
 last-code() {
