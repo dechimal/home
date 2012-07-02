@@ -49,6 +49,7 @@
 (setq c-syntactic-indentation nil)
 
 ;; c mode hook
+(load "font-lock")
 (add-hook 'c++-mode-hook
   '(lambda ()
      (setq c-set-style "stroustrup")
@@ -62,14 +63,16 @@
      (define-key c++-mode-map "\C-c\C-c" nil)
      (define-key c++-mode-map "\C-c\C-a" nil)
      ;; add C++11's keywords to keyword list
-     (setq font-lock-keywords
-           (append
-            '(("\\<\\(alignof\\|alignas\\|constexpr\\|decltype\\|export\\|final\\|noexcept\\|override\\|static_assert\\|thread_local\\)\\>" . 'font-lock-keyword-face)
-              ("\\<\\(nullptr\\|\\(-?[[:digit:]]+\\(\\.[[:digit:]]+\\(e[+-]?[[:digit:]]+\\)?\\)?\\|0x[[:xdigit:]]+\\)\\([[:alpha:]_][[:alnum:]_]*\\)?\\)\\>" . 'font-lock-constant-face)
-              ("\\<\\\(char\\(16\\|32\\)_t\\)\>" . 'font-lock-builtin-face)
-              ("\\<\\(and\\|and_eq\\|bitand\\|bitor\\|compl\\|not\\|not_eq\\|or\\|or_eq\\|xor\\|xor_eq\\)\\>" . 'font-lock-keywords-face))
-            (c++-font-lock-keywords-2))
-     (c-toggle-electric-state t))))
+     (setq c++-font-lock-keywords
+	   (append
+	    '(("\\<\\(alignof\\|alignas\\|constexpr\\|decltype\\|export\\|final\\|noexcept\\|override\\|static_assert\\|thread_local\\)\\>" . font-lock-keyword-face)
+	      ("\\<\\(nullptr\\|\\(-?[[:digit:]]+\\(\\.[[:digit:]]+\\(e[+-]?[[:digit:]]+\\)?\\)?\\|0x[[:xdigit:]]+\\)\\([[:alpha:]_][[:alnum:]_]*\\)?\\)\\>" . font-lock-constant-face)
+	      ("\\<\\\(char\\(16\\|32\\)_t\\)\>" . font-lock-builtin-face))
+	    (c++-font-lock-keywords-2)))
+     (c-toggle-electric-state t)))
+
+(setq font-lock-maximum-decoration
+      '((c++-mode . nil) (t . t)))
 
 ;; kill smart indentation
 (setq c-syntactic-indentation nil)
