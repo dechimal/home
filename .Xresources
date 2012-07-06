@@ -1,16 +1,16 @@
 !基本色設定
 *foreground: #99ffff
 *background: #113311
-*color0: #ffff00
-*color1: #ff66ff
+*color0: #ff66ff
+*color1: #ffff00
 *color2: #ff8833
 *color3: #33ff00
 *color4: #9999ff
 *color5: #ff3333
 *color6: #bbbbbb
 *color7: #00ffee
-*color8: #eeff66
-*color9: #ffccff
+*color8: #ffccff
+*color9: #eeff66
 *color10: #ffbb66
 *color11: #88ff88
 *color12: #ccccff
