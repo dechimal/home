@@ -25,13 +25,19 @@ git-info() {
   branch=$(git branch 2>/dev/null | sed '/^*/s/^* //p;d')
   gitdir=$(git rev-parse --git-dir 2>/dev/null)
   if [[ -d $gitdir/rebase-merge || -d $gitdir/rebase-apply ]]; then
-    color_start=$'\\x1b[31m'
-    color_end=$'\\x1b[0m'
+    color_start='\x1b[31m'
+    color_end='\x1b[0m'
     rebasing_marker='! '
   fi
   if [[ -n $branch ]]; then
     echo -n \ $color_start\[$rebasing_marker$branch\]$color_end
   fi
+}
+last-code() {
+  echo -n ' %(?.o.\x1b[31mx\x1b[0m)'
+}
+abbrev-pwd() {
+  pwd | sed -r "s,^$HOME,~,;s,.*/(.*/.*/.*)$,...\1,;s/^/ /"
 }
 
 function {
@@ -39,7 +45,7 @@ function {
   [[ -n $SSH_CLIENT ]] && ssh=' |'`sed -r 's/ .*//;' <<<$SSH_CLIENT`
   [[ -n $SSH_AGENT_PID ]] && launcher=\*
 
-  PS1=$launcher'$(whoami)$(git-info) $(pwd | sed -r "s,^$HOME,~,;s,.*/(.*/.*/.*)$,...\1,")'$ssh'%% '
+  PS1=$launcher'$(whoami)$(last-code)$(git-info)$(abbrev-pwd)'$ssh'%% '
 }
 # PS1="$launcher%n %(4c;...;)%3~$ssh%# "
 
