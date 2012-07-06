@@ -25,8 +25,8 @@ git-info() {
   branch=$(git branch 2>/dev/null | sed '/^*/s/^* //p;d')
   gitdir=$(git rev-parse --git-dir 2>/dev/null)
   if [[ -d $gitdir/rebase-merge || -d $gitdir/rebase-apply ]]; then
-    color_start='\x1b[31m'
-    color_end='\x1b[0m'
+    color_start='%{\x1b[31m%}'
+    color_end='%{\x1b[0m%}'
     rebasing_marker='! '
   fi
   if [[ -n $branch ]]; then
@@ -34,7 +34,7 @@ git-info() {
   fi
 }
 last-code() {
-  echo -n ' %(?.o.\x1b[31mx\x1b[0m)'
+  echo -n ' %(?.o.%{\x1b[31m%}x%{\x1b[0m%})'
 }
 abbrev-pwd() {
   pwd | sed -r "s,^$HOME,~,;s,.*/(.*/.*/.*)$,...\1,;s/^/ /"
