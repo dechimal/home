@@ -51,7 +51,7 @@ instance Applicative Query where
 --
 -- > workspaces = ["web", "irc", "code" ] ++ map show [4..9]
 --
-myWorkspaces = ["1","gimp","im","4","5","6","7","8","9"]
+myWorkspaces = ["1","gimp","im","4","smplayer","6","7","8","9"]
 
 
 ------------------------------------------------------------------------
@@ -292,7 +292,9 @@ myManageHook = composeAll
     , resource  =? "desktop_window" --> doIgnore
     , resource  =? "kdesktop"       --> doIgnore
     , resource  =? "zenity"         --> doFloat 
-    , (flip any (isInfixOf <$> ["Skype", "Iptux"]) . flip ($)) <$> className --> (I.insertPosition I.End I.Older <+> doShift "im") ]
+    , moveToWS ["Skype", "Iptux"] "im"
+    , moveToWS ["Smplayer"] "smplayer" ]
+    where moveToWS classNames wsName = (flip any (isInfixOf <$> classNames) . flip ($)) <$> className --> (I.insertPosition I.End I.Older <+> doShift wsName)
 
 ------------------------------------------------------------------------
 -- Event handling
