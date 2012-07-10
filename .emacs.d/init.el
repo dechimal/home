@@ -298,6 +298,3 @@
 
 ;; read only で開いたファイルはless風に操作する
 (require 'less)
-
-;; omake mode
-(require 'omake-mode)
