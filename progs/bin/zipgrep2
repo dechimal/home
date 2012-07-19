@@ -1,0 +1,17 @@
+#!/bin/zsh
+
+TRAPINT() {
+  rm -rf $temp
+}
+TRAPTERM() {
+  rm -rf $temp
+}
+
+file=$*[-1]
+
+temp=`mktemp -dt zipgrep.XXXXXXXXXXXX`
+
+unzip -qd $temp $file
+grep -r $*[1,-2] $temp | replace $temp $file\#\!
+
+rm -rf $temp
