@@ -7,11 +7,42 @@ TRAPTERM() {
   rm -rf $temp
 }
 
-file=$*[-1]
+hyphon=0
+with_hyphon=0
+for i; do
+  ((hyphon++))
+  if [[ $i == '--' ]]; then
+    with_hyphon=1
+    break
+  fi
+done
+
+if [[ with_hyphon == 1 ]]; then
+  files=($*[(($hyphon+1)),-1])
+  opts_before_hyphon=("$@[1,(($hyphon-1))]")
+else
+  opts_before_hyphon=("$@")
+fi
+
+files=($files `grep "$opts_before_hyphon[@]" -l`)
+files=($files `grep "$opts_before_hyphon[@]" -L`)
+
+set -A grep_opts
+
+for i in "$opts_before_hyphon[@]"; do
+  for j in $files; do
+    [[ $i == $j ]] && continue 2
+  done
+  grep_opts[(($#grep_opts+1))]=$i
+done
 
 temp=`mktemp -dt zipgrep.XXXXXXXXXXXX`
 
-unzip -qd $temp $file
-grep -r $*[1,-2] $temp | replace $temp $file\#\!
+for i in $files; do
+  unzip -qd $temp $i
+  grep "$grep_opts[@]" -r $temp | replace $temp $i/\#\!
+  rm -rf $temp/*
+done
+
 
 rm -rf $temp
