@@ -18,6 +18,7 @@ compinit
 # End of lines added by compinstall
 
 setopt hist_ignore_dups
+setopt pushd_ignore_dups
 
 setopt promptsubst
 git-info() {
