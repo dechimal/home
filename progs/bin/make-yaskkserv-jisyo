@@ -1,3 +1,3 @@
 #!/bin/zsh
 setopt extendedglob
-yaskkserv_make_dictionary =(skkdic-expr2 $(echo /usr/share/skk/SKK-JISYO.[^.]# | sed s/\ /\ +\ /g) | skkdic-sort) /usr/share/skk/SKK-JISYO.L.yaskkserv
+yaskkserv_make_dictionary =(echo /usr/share/skk/SKK-JISYO.* | sed '1!i+' | xargs skkdic-expr2 | skkdic-sort) /usr/local/share/skk/SKK-JISYO.yaskkserv
