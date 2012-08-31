@@ -1,0 +1,10 @@
+[user]
+	name = d
+	email = d.g.feat.th2iinchoiincho@gmail.com
+[branch]
+	autosetuprebase = always
+[alias]
+	out = checkout
+	st = status
+	amend = commit --amend
+	tree = log --graph
