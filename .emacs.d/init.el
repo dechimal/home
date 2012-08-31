@@ -49,6 +49,8 @@
 ;; スマートインデントを殺す
 (setq c-syntactic-indentation nil)
 
+(global-set-key "\C-h" 'delete-backward-char)
+
 ;; c mode hook
 (load "font-lock")
 (defun my-c++-mode-hook ()
@@ -233,7 +235,10 @@
      (define-key term-raw-map "\M-d" 'kill-word-with-term)
      (define-key term-raw-map "\C-k" 'kill-line-with-term)
      (define-key term-raw-map [(control /)] 'undo-with-term)
-     (define-key term-raw-map "\C-y" 'term-paste)))
+     (define-key term-raw-map "\C-y" 'term-paste)
+     (define-key term-raw-map "\C-o" 'other-window)
+     (define-key term-raw-map "\C-q" 'quoted-insert)
+     (define-key term-raw-map "\C-g" 'keyboard-quit)))
 
 ; haskell-mode-hook
 (require 'haskell-mode)
