@@ -3,6 +3,11 @@
   (append '("~d/.emacs.d/auto-install"
             "~d/.emacs.d"
             "/usr/share/emacs/site-lisp/yas") load-path))
+(setq package-archives
+      '(("elpa" . "http://tromey.com/elpa/")
+	("marmalade" . "http://marmalade-repo.org/packages/")
+	("melpa" . "http://melpa.milkbox.net/packages/")))
+
 (require 'redo+)
 (require 'tramp)
 
@@ -124,10 +129,6 @@
   (recenter))
 
 (global-set-key "\C-x\C-l" 'toggle-truncate-lines)
-
-;; C-/のundoでredoしないようにする
-(global-set-key [(control /)] 'undo-only)
-(global-set-key "\C-\\" 'redo)
 
 ; C-tab とか C-S-tab でバッファ切り替え
 (setq enable-other-buffer-select nil)
@@ -261,26 +262,37 @@
 ; anything
 ; (require 'anything-startup)
 
+(add-hook 'after-init-hook
+          (lambda () 
+            ;; C-/のundoでredoしないようにする
+            (require 'undo-tree)
+            (global-set-key [(control /)] 'undo-tree-undo)
+            (global-set-key "\C-\\" 'undo-tree-redo)
+            (global-set-key "\C-xu" 'undo-tree-visualize)
+
+            ;; auto-complete
+            ;; auto-complete-clangをyaourtからインストールしたために
+            ;; clangとauto-completeもpacmanでインストールされたけど気にするな
+            (require 'auto-complete-config)
+
+            (ac-config-default)
+            (define-key ac-mode-map [(control .)] 'auto-complete)
+            (setq ac-use-menu-map t)
+            (define-key ac-menu-map "\C-p" 'ac-previous)
+            (define-key ac-menu-map "\C-n" 'ac-next)
+            (ac-set-trigger-key "TAB")
+
+            (setq ac-clang-executable "~d/progs/bin/clang++")
+            (setq ac-clang-flags '("-I." "-std=c++0x"))
+            (setq ac-auto-start nil)
+            (setq ac-trigger-commands (append (list 'delete-char 'backward-char) ac-trigger-commands))
+            ;; (setq clang-executable "/usr/bin/clang++")
+            ))
+
 (require 'yasnippet)
-(yas/initialize)
-(setq yas/root-directory '("~d/.emacs.d/yas-snippets"))
-(setq yas/trigger-key nil)
-(mapc 'yas/load-directory yas/root-directory)
-
-; auto-complete
-; auto-complete-clangをyaourtからインストールしたために
-; clangとauto-completeもpacmanでインストールされたけど気にするな
-(require 'auto-complete-config)
-
-(ac-config-default)
-(define-key ac-mode-map [(control .)] 'auto-complete)
-(setq ac-use-menu-map t)
-(define-key ac-menu-map "\C-p" 'ac-previous)
-(define-key ac-menu-map "\C-n" 'ac-next)
-(ac-set-trigger-key "TAB")
-
-(setq ac-clang-executable "~d/progs/bin/clang++")
-(setq ac-clang-flags '("-I." "-std=c++0x"))
+(setq yas-snippets-dirs '("~d/.emacs.d/yas-snippets"))
+(setq yas-trigger-key nil)
+(mapc 'yas-load-directory yas-snippets-dirs)
 
 (add-hook 'c++-mode-hook
   (lambda ()
@@ -291,10 +303,6 @@
     ; (setq clang-completion-flags "-std=c++0x -I. -I$HOME/repos/boost")
     ; (define-key ac-mode-map [(control .)] 'ac-complete-clang)
     ))
-
-(setq ac-auto-start nil)
-(setq ac-trigger-commands (append (list 'delete-char 'backward-char) ac-trigger-commands))
-; (setq clang-executable "/usr/bin/clang++")
 
 ;; read only で開いたファイルはless風に操作する
 (require 'less)
