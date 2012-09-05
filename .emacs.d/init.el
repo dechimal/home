@@ -1,19 +1,15 @@
 
 (setq load-path
-  (append '("~d/.emacs.d/auto-install"
-            "~d/.emacs.d"
+  (append '("~d/.emacs.d"
             "/usr/share/emacs/site-lisp/yas") load-path))
 (setq package-archives
       '(("elpa" . "http://tromey.com/elpa/")
 	("marmalade" . "http://marmalade-repo.org/packages/")
 	("melpa" . "http://melpa.milkbox.net/packages/")))
 
-(require 'redo+)
 (require 'tramp)
 
-; auto-install
-(require 'auto-install)
-(setq auto-install-directory "~d/.emacs.d/auto-install")
+(global-set-key "\C-h" 'backward-delete-char)
 
 ; tool bar, menu bar
 (if window-system
@@ -67,6 +63,7 @@
      (define-key c++-mode-map "\C-m" 'newline-and-indent)
      (define-key c++-mode-map "\C-c\C-c" nil)
      (define-key c++-mode-map "\C-c\C-a" nil)
+     (define-key c++-mode-map "\C-c\C-s" nil)
      ;; add C++11's keywords to keyword list
      (setq c++-font-lock-keywords
 	   (append
@@ -131,11 +128,6 @@
 (global-set-key "\C-x\C-l" 'toggle-truncate-lines)
 
 ; C-tab とか C-S-tab でバッファ切り替え
-(setq enable-other-buffer-select nil)
-(defun other-buffer-select
-  (interactive)
-  (setq enable-other-buffer-select (not enable-other-buffer-select)))
-
 (global-set-key [C-tab] 'next-buffer)
 (global-set-key [C-S-tab] 'previous-buffer)
 
@@ -175,19 +167,22 @@
 (global-set-key [(control c)(control /)] 'comment-or-uncomment-region)
 
 ; terminal
-(require 'multi-term)
-(setq system-uses-terminfo nil)
+(add-hook 'after-init-hook
+  (lambda ()
+    (require 'multi-term)
 
-(defun term-mode-switch ()
-  (interactive)
-  (if (term-in-char-mode)
-      (term-line-mode)
-    (if (term-in-line-mode)
-        (term-char-mode))))
+    (defun term-mode-switch ()
+      (interactive)
+      (if (term-in-char-mode)
+          (term-line-mode)
+        (if (term-in-line-mode)
+            (term-char-mode))))
 
-(setq multi-term-program "/bin/zsh")
-(setq multi-term-buffer-name "term")
-(add-to-list 'term-unbind-key-list "M-x")
+    (setq multi-term-program "/bin/zsh")
+    (setq multi-term-buffer-name "term")
+    (add-to-list 'term-unbind-key-list "M-x")
+
+    (setq system-uses-terminfo nil)))
 
 ;; term-modeでterminalのkill-ringを変更する際emacs側のも変更する
 
@@ -259,50 +254,53 @@
 (setq-default global-linum-mode t)
 (global-linum-mode t)
 
-; anything
-; (require 'anything-startup)
+(add-hook 'after-init-hook
+ (lambda () 
+   ;; C-/のundoでredoしないようにする
+   (require 'undo-tree)
+   (global-set-key [(control /)] 'undo-tree-undo)
+   (global-set-key "\C-\\" 'undo-tree-redo)
+   (global-set-key "\C-xu" 'undo-tree-visualize)))
+
+;; auto-complete
+;; auto-complete-clangをyaourtからインストールしたために
+;; clangとauto-completeもpacmanでインストールされたけど気にするな
+(add-hook 'after-init-hook
+ (lambda ()
+   (require 'auto-complete-config)
+
+   (ac-config-default)
+   (define-key ac-mode-map [(control .)] 'auto-complete)
+   (setq ac-use-menu-map t)
+   (define-key ac-menu-map "\C-p" 'ac-previous)
+   (define-key ac-menu-map "\C-n" 'ac-next)
+   (ac-set-trigger-key "TAB")
+
+   (setq ac-auto-start nil)
+   (setq ac-trigger-commands (append (list 'delete-char 'backward-char) ac-trigger-commands))
+   ))
 
 (add-hook 'after-init-hook
-          (lambda () 
-            ;; C-/のundoでredoしないようにする
-            (require 'undo-tree)
-            (global-set-key [(control /)] 'undo-tree-undo)
-            (global-set-key "\C-\\" 'undo-tree-redo)
-            (global-set-key "\C-xu" 'undo-tree-visualize)
-
-            ;; auto-complete
-            ;; auto-complete-clangをyaourtからインストールしたために
-            ;; clangとauto-completeもpacmanでインストールされたけど気にするな
-            (require 'auto-complete-config)
-
-            (ac-config-default)
-            (define-key ac-mode-map [(control .)] 'auto-complete)
-            (setq ac-use-menu-map t)
-            (define-key ac-menu-map "\C-p" 'ac-previous)
-            (define-key ac-menu-map "\C-n" 'ac-next)
-            (ac-set-trigger-key "TAB")
-
-            (setq ac-clang-executable "~d/progs/bin/clang++")
-            (setq ac-clang-flags '("-I." "-std=c++0x"))
-            (setq ac-auto-start nil)
-            (setq ac-trigger-commands (append (list 'delete-char 'backward-char) ac-trigger-commands))
-            ;; (setq clang-executable "/usr/bin/clang++")
-            ))
-
-(require 'yasnippet)
-(setq yas-snippets-dirs '("~d/.emacs.d/yas-snippets"))
-(setq yas-trigger-key nil)
-(mapc 'yas-load-directory yas-snippets-dirs)
+ (lambda ()
+   (require 'yasnippet)
+   (setq yas-snippets-dirs '("~d/.emacs.d/yas-snippets"))
+   (setq yas-trigger-key nil)
+   (mapc 'yas-load-directory yas-snippets-dirs)))
 
 (add-hook 'c++-mode-hook
-  (lambda ()
-    (make-local-variable 'ac-sources)
-    (make-local-variable 'clang-completion-flags)
-    (make-local-variable 'ac-trigger-commands)
-    (setq ac-trigger-commands (append (list 'c-scope-operator)) ac-trigger-key-commands)
-    ; (setq clang-completion-flags "-std=c++0x -I. -I$HOME/repos/boost")
-    ; (define-key ac-mode-map [(control .)] 'ac-complete-clang)
-    ))
+ (lambda ()
+   (make-local-variable 'ac-sources)
+   (make-local-variable 'ac-trigger-commands)
+   (setq ac-trigger-commands (append (list 'c-scope-operator)) ac-trigger-key-commands)
+   ))
 
 ;; read only で開いたファイルはless風に操作する
-(require 'less)
+(add-hook 'after-init-hook
+ (lambda ()
+   (require 'less)))
+
+;; jaunte
+(add-hook 'after-init-hook
+ (lambda ()
+   (require 'jaunte)
+   (global-set-key "\C-c\C-s" 'jaunte)))
