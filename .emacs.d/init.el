@@ -4,8 +4,8 @@
             "/usr/share/emacs/site-lisp/yas") load-path))
 (setq package-archives
       '(("elpa" . "http://tromey.com/elpa/")
-	("marmalade" . "http://marmalade-repo.org/packages/")
-	("melpa" . "http://melpa.milkbox.net/packages/")))
+        ("marmalade" . "http://marmalade-repo.org/packages/")
+        ("melpa" . "http://melpa.milkbox.net/packages/")))
 
 (require 'tramp)
 
@@ -51,50 +51,58 @@
 
 ;; c mode hook
 (load "font-lock")
+(defun my-c++-mode-hook ()
+  (setq c-set-style "stroustrup")
+  (setq c-basic-offset 4)
+  (setq c-auto-newline nil)
+  (c-set-offset 'innamespace 0)
+  (dolist (key '(";" "{" "<" ">" "," "(" ")"))
+    (define-key c++-mode-map key nil))
+  (define-key c++-mode-map [(control :)] 'c-scope-operator)
+  (define-key c++-mode-map "\C-i" 'deepen-line-or-region)
+  (define-key c++-mode-map (kbd "<backtab>") 'shallow-line-or-region)
+  (define-key c++-mode-map "\C-m" 'newline-and-indent)
+  (define-key c++-mode-map "\C-c\C-c" nil)
+  (define-key c++-mode-map "\C-c\C-a" nil)
+  (define-key c++-mode-map "\C-c\C-s" nil)
+  ;; add C++11's keywords to keyword list, and mute typename followed by eol, ::type
+  (font-lock-add-keywords nil
+    '(("\\<\\(typename\\)$\\|\\(\\:\\:type\\)\\>" . 'font-lock-silent-face)
+      ("\\<\\(alignof\\|alignas\\|constexpr\\|decltype\\|export\\|final\\|noexcept\\|override\\|static_assert\\|thread_local\\)\\>" . font-lock-keyword-face)
+      ("\\<\\(nullptr\\|\\(-?[[:digit:]]+\\(\\.[[:digit:]]+\\(e[+-]?[[:digit:]]+\\)?\\)?\\|0x[[:xdigit:]]+\\)\\([[:alpha:]_][[:alnum:]_]*\\)?\\)\\>" . font-lock-constant-face)
+      ("\\<\\(char\\(8\\|16\\|32\\)_t\\)\\>" . font-lock-builtin-face)))
+  (make-local-variable 'font-lock-maximum-decoration)
+  (setcdr (assoc 'c++-mode font-lock-maximum-decoration) 2)
+  (font-lock-fontify-buffer)
+  (c-toggle-electric-state t))
+
 (add-hook 'c++-mode-hook
-  '(lambda ()
-     (setq c-set-style "stroustrup")
-     (setq c-basic-offset 4)
-     (setq c-auto-newline nil)
-     (c-set-offset 'innamespace 0)
-     (dolist (key '(";" "{" "<" ">" "," "(" ")"))
-       (define-key c++-mode-map key nil))
-     (define-key c++-mode-map [(control :)] 'c-scope-operator)
-     (define-key c++-mode-map "\C-m" 'newline-and-indent)
-     (define-key c++-mode-map "\C-c\C-c" nil)
-     (define-key c++-mode-map "\C-c\C-a" nil)
-     (define-key c++-mode-map "\C-c\C-s" nil)
-     ;; add C++11's keywords to keyword list
-     (setq c++-font-lock-keywords
-	   (append
-	    '(("\\<\\(alignof\\|alignas\\|constexpr\\|decltype\\|export\\|final\\|noexcept\\|override\\|static_assert\\|thread_local\\)\\>" . font-lock-keyword-face)
-	      ("\\<\\(nullptr\\|\\(-?[[:digit:]]+\\(\\.[[:digit:]]+\\(e[+-]?[[:digit:]]+\\)?\\)?\\|0x[[:xdigit:]]+\\)\\([[:alpha:]_][[:alnum:]_]*\\)?\\)\\>" . font-lock-constant-face)
-	      ("\\<\\\(char\\(16\\|32\\)_t\\)\>" . font-lock-builtin-face))
-	    (c++-font-lock-keywords-2)))
-     (c-toggle-electric-state t)))
+  'my-c++-mode-hook)
+
+(defface font-lock-silent-face
+  '((t :foreground "#448844"))
+  "A face for more silent words.")
+
+(defun deepen-line-or-region (&optional arg region)
+  (interactive
+   (list (prefix-numeric-value current-prefix-arg)
+         (use-region-p)))
+  (if (not region)
+      (c-indent-command (prefix-numeric-value arg))
+    (let ((depth (* c-basic-offset arg)))
+      (indent-code-rigidly (region-beginning) (region-end) depth)
+      (setq deactivate-mark nil))))
+(defun shallow-line-or-region (&optional arg region)
+  (interactive
+   (list (prefix-numeric-value current-prefix-arg)
+         (use-region-p)))
+  (deepen-line-or-region (- arg) region))
 
 (setq font-lock-maximum-decoration
       '((c++-mode . nil) (t . t)))
 
 ;; kill smart indentation
 (setq c-syntactic-indentation nil)
-
-(setq-default deepen-function (lambda (point)
-                                (insert "    ")))
-(setq-default shallow-function (lambda (point)
-                                 (re-search-forward "^\\(    \\|\\t\\)" point)
-                                 (delete-region (match-beginning) (match-end))))
-
-(defun deepen-region (begin end &optional arg)
-  (save-excursion
-    (goto-char (region-beginning))
-    (beginning-of-line)
-    (while (<= (point) (1- (region-end)))
-      (dotimes (i arg)
-        (if (< arg 0)
-            (funcall deepen-function (point))
-          (funcall shallow-function (point)))
-        (forward-line)))))
 
 (add-hook 'java-mode-hook
   '(lambda ()
@@ -109,7 +117,7 @@
 (setq auto-mode-alist
       (append
         '(("\\.py$" . python-mode)
-	  ("\\.hpp$" . c++-mode)
+          ("\\.hpp$" . c++-mode)
           ("\\.h$" . c++-mode)
           ("\\.cs$" . c++-mode)
           ("\\.hs$" . haskell-mode))
