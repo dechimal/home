@@ -9,17 +9,14 @@
 
 import XMonad
 import Data.Monoid
-import qualified System.IO.UTF8 as U
+import Data.Maybe
 import System.Exit
-import Control.Monad(sequence_, (>=>))
+import Control.Monad(sequence)
 import Control.Applicative
 
 import qualified XMonad.StackSet as W
 import Data.Map(fromList)
-import Data.List(isInfixOf)
-import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks
-import XMonad.Util.Run(spawnPipe)
 import qualified XMonad.Layout.WindowNavigation as N
 import qualified XMonad.Layout.ResizableTile as R
 import qualified XMonad.Layout.SubLayouts as S
@@ -51,7 +48,7 @@ instance Applicative Query where
 --
 -- > workspaces = ["web", "irc", "code" ] ++ map show [4..9]
 --
-myWorkspaces = ["1","gimp","im","4","smplayer","6","7","8","9"]
+myWorkspaces = ["main","sub","gimp","im","video","6","7","8","9"]
 
 
 ------------------------------------------------------------------------
@@ -111,13 +108,13 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     , ((mod1Mask, xK_Tab), S.onGroup W.focusDown')
     , ((ma, xK_space), S.toSubl NextLayout)
 
-    -- Swapthe focused window and the master window
+    -- Swap the focused window and the master window
     , ((modm, xK_Return), windows W.swapMaster)
 
-    -- Swapthe focused window with the next window
+    -- Swap the focused window with the next window
     , ((ms,xK_period), windows W.swapDown)
 
-    -- Swapthe focused window with the previous window
+    -- Swap the focused window with the previous window
     , ((ms,xK_comma), windows W.swapUp)
 
     -- Shrink the master area
@@ -132,7 +129,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     -- Expand the slave area alternate direction 
     , ((ms,   xK_m), sendMessage R.MirrorShrink)
 
-    -- Pushwindow back into tiling
+    -- Push window back into tiling
     , ((modm, xK_t), withFocused $ windows . W.sink)
 
     -- Increment the number of windows in the master area
@@ -149,7 +146,8 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     , ((ms,   xK_z), sendMessage M.MagnifyLess)
     
     -- Screen shot
-    , ((0, xK_Print), spawn "scrot")
+    , ((modm, xK_Print), spawn "scrot")
+    , ((ms,   xK_Print), spawn "scrot -s")
 
     -- Firefox
     , ((mod4Mask, xK_f), spawn "firefox -P -no-remote")
@@ -161,9 +159,9 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     , ((modm, xK_c), spawn "xsel -o -p | xsel -i -b")
 
     -- Show Clock
-    , ((modm, xK_d), spawn "zenity --info --text=\"`date`\"")
+    , ((modm, xK_d), spawn "date '+%Y/%m/%d(%a) %T ' | dzen2 -p 3 -ta r -e button1=exit")
 
-    -- Quitxmonad
+    -- Quit xmonad
     , ((ms,xK_q), io (exitWith ExitSuccess))
 
     -- Restart xmonad
@@ -270,7 +268,6 @@ myLayout = nav
      -- Color of focus navigation
      navColor = "#0099ff"
 
-
 ------------------------------------------------------------------------
 -- Window rules:
 
@@ -287,14 +284,23 @@ myLayout = nav
 -- 'className' and 'resource' are used below.
 --
 myManageHook = composeAll
-    [ className =? "MPlayer"        --> doFloat
-    -- , className =? "Gimp"           --> doFloat
-    , resource  =? "desktop_window" --> doIgnore
-    , resource  =? "kdesktop"       --> doIgnore
-    , resource  =? "zenity"         --> doFloat 
-    , moveToWS ["Skype", "Iptux"] "im"
-    , moveToWS ["Smplayer"] "smplayer" ]
-    where moveToWS classNames wsName = (flip any (isInfixOf <$> classNames) . flip ($)) <$> className --> (I.insertPosition I.End I.Older <+> doShift wsName)
+               [ className =? "MPlayer"       --> doFloat
+               , appName  =? "zenity"         --> doFloat
+               , windowType <==> atom "_NET_WM_WINDOW_TYPE_DIALOG" --> doFloat
+               , moveToWS [ className =? "Skype"
+                          , className =? "Iptux"] "im"
+               , moveToWS [ className =? "Smplayer"
+                          , windowRole =? "vlc-video"] "video"
+               , moveToWS [ className =? "Gimp"] "gimp"
+               , windowType <==> atom "_NET_WM_WINDOW_TYPE_TOOLBAR" --> doIgnore
+               , firefoxHooks
+               ]
+    where moveToWS queries wsName = or <$> sequence queries --> (I.insertPosition I.End I.Older <+> doShift wsName)
+          firefoxHooks = composeAll $ map (className =? "Firefox" -->) $
+                         [ windowRole =? "Preferences" --> doFloat
+                         , windowRole =? "About"       --> doFloat
+                         , windowRole =? "Manager"     --> doFloat
+                         ]
 
 ------------------------------------------------------------------------
 -- Event handling
@@ -314,16 +320,18 @@ myEventHook= mempty
 -- See the 'XMonad.Hooks.DynamicLog' extension for examples.
 --
 
-myLogHook = sequence_ [ fadeHook
-                      ]
-    where fadeHook =
-              F.fadeOutLogHook $ F.fadeIf (liftA2 pred F.isUnfocused className) 0.8
-          pred unfocused className = unfocused && (all (/= className) opaqueWindowClasses)
-
-opaqueWindowClasses = [ "Smplayer"
-                      , "Gimp"
-                      , "Inkscape"
-                      ]
+myLogHook = composeAll
+            [ fadeHook
+            , setCurrentWallPaper
+            ]
+    where fadeHook = F.fadeOutLogHook $
+                     F.fadeIf (F.isUnfocused <&&> (fmap (not . or) $ sequence fadeExcept))
+                          0.8
+          fadeExcept = [ className =? "Smplayer"
+                       , className =? "Gimp"
+                       , className =? "Inkscape"
+                       , windowRole =? "vlc-video"
+                       ]
 
 ------------------------------------------------------------------------
 -- Startup hook
@@ -341,9 +349,7 @@ myStartupHook = return ()
 -- Run xmonad with the settings you specify. No need to modify this.
 --
 main = do
---  xmproc <- spawnPipe "dzen2"
---  xmonad $ defaults xmproc
-  xmonad defaults
+  xmonad $ myConfig
 
 -- A structure containing your configuration settings, overriding
 -- fields in the default config. Any you don't override, will
@@ -351,8 +357,7 @@ main = do
 --
 -- No need to modify this.
 --
--- defaults hook = defaultConfig {
-defaults = defaultConfig {
+myConfig = defaultConfig {
       -- simple stuff
         terminal           = "urxvt",
         focusFollowsMouse  = False,
@@ -367,7 +372,7 @@ defaults = defaultConfig {
         mouseBindings      = myMouseBindings,
 
       -- hooks, layouts
-        layoutHook         = avoidStruts myLayout,
+        layoutHook         = myLayout,
         manageHook         = myManageHook,
         handleEventHook    = myEventHook,
         logHook            = myLogHook,
@@ -393,3 +398,40 @@ defaults = defaultConfig {
 -- Set numlockMask = 0 if you don't have a numlock key, or want to treat
 -- numlock status separately.
 --
+
+atom :: String -> Query Atom
+atom = liftX . getAtom
+
+windowRole :: Query String
+windowRole = stringProperty "WM_WINDOW_ROLE"
+
+windowType :: Query Atom
+windowType = do
+    w <- ask
+    liftX $ withDisplay $ \d -> do
+               a <- getAtom "_NET_WM_WINDOW_TYPE"
+               p <- io $ getWindowProperty32 d a w
+               return $ fromIntegral $ fromMaybe 0 $ p >>= safeHead
+    where
+      safeHead (x:_) = Just x
+      safeHead _ = Nothing
+
+(<==>), (</=>) :: (Applicative f, Eq a) => f a -> f a -> f Bool
+(<==>) = liftA2 (==)
+(</=>) = liftA2 (/=)
+infix 4 <==>, </=>
+
+setCurrentWallPaper :: X ()
+setCurrentWallPaper = do
+  xstate <- get
+  let ws = windowset xstate
+      tag = W.tag $ W.workspace $ W.current ws
+      wptable = [ ("main", "~/doc/picture/wp-handmade/th2/wp-th2-fullhd.png")
+                , ("gimp", "~/doc/picture/wp-handmade/aznyan/aznyan.png")
+                , ("im", "~/doc/picture/wp-handmade/aznyan/aznyan4.png")
+                , ("sub", "~/doc/picture/wp-handmade/dechimal/dechimal.png")
+                , ("video", "~/doc/picture/wp-handmade/th2/wp-th2-fullhd-yellow.png")
+                ]
+      wpname = fromMaybe (snd $ head $ wptable) $ lookup tag wptable
+  -- spawn $ "hsetroot -center " ++ wpname -- hsetroot work poor when change to no window workspace.
+  return ()
