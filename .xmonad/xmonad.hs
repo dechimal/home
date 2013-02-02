@@ -10,6 +10,7 @@
 import XMonad
 import Data.Monoid
 import Data.Maybe
+import Data.List(isPrefixOf)
 import System.Exit
 import Control.Monad(sequence)
 import Control.Applicative
@@ -146,8 +147,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     , ((ms,   xK_z), sendMessage M.MagnifyLess)
     
     -- Screen shot
-    , ((modm, xK_Print), spawn "scrot")
-    , ((ms,   xK_Print), spawn "scrot -s")
+    , ((modm, xK_Print), spawn "scrot ~/ss-`date +%Y-%m-%d-%T`.png")
 
     -- Firefox
     , ((mod4Mask, xK_f), spawn "firefox -P -no-remote")
@@ -300,6 +300,7 @@ myManageHook = composeAll
                          [ windowRole =? "Preferences" --> doFloat
                          , windowRole =? "About"       --> doFloat
                          , windowRole =? "Manager"     --> doFloat
+                         , isPrefixOf <$> pure "StylishEdit" <*> windowRole --> doFloat
                          ]
 
 ------------------------------------------------------------------------
