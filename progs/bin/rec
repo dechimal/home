@@ -1,0 +1,156 @@
+#!/bin/zsh
+
+setopt extendedglob
+setopt posix_jobs
+
+run() {
+
+opts=`getopt -l device:,time:,out:,help,verbose d:t:o:hv "$@"`
+
+if [[ $? != 0 || $# == 0 ]]; then
+    msg invalid arguments
+    echo $usage >&2
+    exit
+fi
+
+opts=(${(z)opts})
+
+out=/dev/stdout
+while true; do
+    name=$opts[1]
+    param=${(Q)opts[2]}
+    case $name in
+    -h|--help)
+        echo $usage
+        exit;;
+    -d|--device)
+        devnum=$param
+        shift 2 opts;;
+    -t|--time)
+        rectime=($rectime $param)
+        shift 2 opts;;
+    -o|--out)
+        out=$param
+        shift 2 opts;;
+    -v|--verbose)
+        verbose=1
+        shift 1 opts;;
+    --)
+        shift opts
+        break;;
+    esac
+done
+
+if [[ $#opts > 1 ]]; then
+    msg extra parameters: ${(Q)opts}
+    exit 1
+elif [[ $#opts == 0 ]]; then
+    msg missing channel
+    exit 1
+fi
+
+channel=${(Q)opts[1]}
+
+if [[ -z $devnum ]]; then
+    verbose detect and lock device...
+    for i in `[[ $channel -lt 100 ]] && echo 9 11 || echo 8 10`; do
+        fuse_b25 -o allow_root /dev/dvb/adapter$i
+        if [[ $? == 0 ]]; then
+            devnum=$i
+            break
+        fi
+    done
+    if [[ -z $devnum ]]; then
+        msg all device are busy or not found
+        exit 1
+    fi
+else
+    verbose lock device...
+    fuse_b25 -o allow_root /dev/dvb/adapter$devnum
+    mounted=$?
+    if [[ $mounted != 0 ]]; then
+        msg device is busy or not found
+        exit 1
+    fi
+fi
+
+if [[ -n $verbose ]]; then
+    verbose devnum: $devnum
+    verbose rectime: $rectime
+    verbose out: $out
+    verbose channel: $channel
+fi
+
+verbose tune...
+tune $devnum $channel &
+tunepid=$!
+sleep 0.1
+if ! pgrep -P $$ tune; then
+    msg tune failed
+else
+    verbose recording...
+    if [[ -n $rectime ]]; then
+        timeout --foreground $rectime cat /dev/dvb/adapter$devnum/dvr0 >$out
+        exitcode=$?
+        if [[ $exitcode != 124 ]]; then
+            exit $exitcode
+        fi
+    else
+        cat /dev/dvb/adapter$devnum/dvr0 >$out
+        exit 0
+    fi
+fi
+kill $tunepid
+
+sleep 2
+fusermount -u /dev/dvb/adapter$devnum
+
+exit $exitcode
+
+}
+
+cleanup() {
+    msg stopped by SIG$1
+    verbose stop recording...
+    if [[ -n $rectime ]]; then
+        pkill -$1 -P $$ timeout
+    else
+        pkill -$1 -P $$ cat
+    fi
+    verbose stop tuning...
+    pkill -P $$ tune
+    sleep 1
+    if [[ $mounted != 0 ]]; then
+        verbose unmount device...
+        fusermount -u /dev/dvb/adapter$devnum
+    fi
+    exit 1
+}
+
+TRAPTERM() {
+    cleanup TERM
+}
+TRAPINT() {
+    cleanup INT
+}
+TRAPKILL() {
+    cleanup KILL
+}
+
+msg() {
+    echo tune2: "$@" >&2
+}
+verbose() {
+    [[ -n $verbose ]] && echo "$@" >&2
+}
+
+usage=\
+'usage: tune2 [option...] channel
+options:
+  -d --device NUMBER  specify device number (default: auto detect)
+  -t --time TIME      recording time (default: no limit)
+  -o --out FILE       output file (default: stdout)
+  -v --verbose        show verbose message
+  -h --help           show this help'
+
+run $*
