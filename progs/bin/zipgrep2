@@ -39,9 +39,14 @@ done
 temp=`mktemp -dt zipgrep.XXXXXXXXXXXX`
 
 for i in $files; do
-  unzip -qd $temp $i
-  grep "$grep_opts[@]" -r $temp | replace $temp $i/\#\!
-  rm -rf $temp/*
+  mime=`file -bi $i`
+  if [[ -z ${mime##application/zip*} ]]; then
+    unzip -qd $temp $i
+    grep "$grep_opts[@]" -r $temp | sed "s,$temp,$i/#!,"
+    rm -rf $temp/*
+  else
+    grep "$grep_opts[@]" $i
+  fi
 done
 
 
