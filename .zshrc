@@ -43,7 +43,7 @@ abbrev-pwd() {
 
 function {
   local ssh launcher
-  [[ -n $SSH_CLIENT ]] && ssh=' |'`sed -r 's/ .*//;' <<<$SSH_CLIENT`
+  [[ -n $SSH_CLIENT ]] && ssh=' |'`hostname`
   [[ -n $SSH_AGENT_PID ]] && launcher=\*
 
   PS1=$launcher'$(whoami)$(last-code)$(git-info)$(abbrev-pwd)'$ssh'%% '
