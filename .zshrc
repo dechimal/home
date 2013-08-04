@@ -65,6 +65,7 @@ alias semacs='sudo emacs -u d -nw'
 alias ldcrontab='crontab ~/.crontab'
 alias xlock='xlock -mode blank'
 alias ll='ls -l'
+alias CP932='iconv -f cp932'
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
 export EDITOR=emacs${WINDOWID:+client}
