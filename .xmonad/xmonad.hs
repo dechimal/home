@@ -158,6 +158,9 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     -- Copy primary selection to clipboard
     , ((modm, xK_c), spawn "xsel -o -p | xsel -i -b")
 
+    -- Copy clipboard to primary selection
+    , ((ma, xK_c), spawn "xsel -o -b | xsel -i -p")
+
     -- Show Clock
     , ((modm, xK_d), spawn "date '+%Y/%m/%d(%a) %T ' | dzen2 -p 3 -ta r -e button1=exit")
 
@@ -225,7 +228,7 @@ myLayout = nav
            $ B.boringWindows
            $ msgWS "im"
            $ gimpWS "gimp" 
-           $ M.magnifiercz (1.1/1)
+           -- $ M.magnifiercz (1.1/1)
            $ S.subLayout []
                  (Full ||| tiled ||| mirrorTiled)
                  (tiled ||| mirrorTiled)
@@ -235,7 +238,7 @@ myLayout = nav
      mirrorTiled = Mirror $ R.ResizableTall nmaster mirrorDelta mirrorRatio []
 
      -- Layout modifier for GIMP
-     gimpWS wsname = PW.onWorkspace wsname gimpLayout
+     gimpWS wsname = PW.onWorkspace wsname Full
      gimpLayout = leftTiled $ rightTiled Full
      leftTiled = D.onLeft $ dock $ P.Role "gimp-toolbox"
      rightTiled = D.onRight $ dock $ P.Role "gimp-dock"
