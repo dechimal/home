@@ -1,7 +1,15 @@
 #!/bin/zsh
 
-temp=`mktemp --tmpdir g++i-trunk.XXXXXXXX`
 
-g++-trunk -I$HOME/repos/{boost,p-stade} -std=gnu++0x -xc++ "$@" -o $temp &&
-[ -x $temp ] && $temp
-rm $temp
+temp=`mktemp --tmpdir g++i-trunk.XXXXXXXX`
+g++-trunk -I$HOME/{abs/boost/src/boost,repos/p-stade} -std=gnu++11 -xc++ "$@" -o $temp
+ret=$?
+if [[ $ret -eq 0 ]]; then
+  if [[ -x $temp ]]; then
+    $temp
+  else
+    cat $temp
+  fi
+fi
+rm -f $temp
+exit $ret
