@@ -163,7 +163,6 @@
 
 (global-set-key "\C-c\C-r" (lambda ()
                              (interactive)
-                             (start-kbd-macro)
                              (repeat-kbd-macro-mode)
                              (call-last-kbd-macro)))
 

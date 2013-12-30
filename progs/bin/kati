@@ -1,0 +1,12 @@
+#!/bin/sh
+
+while test $PWD != / -a \! -f .makeroot; do
+      cd ..
+done
+
+if test -f .makeroot; then
+    make "$@"
+else
+    echo ".makeroot not found" >&2
+    exit 1
+fi

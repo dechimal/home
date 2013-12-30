@@ -152,6 +152,9 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     -- Firefox
     , ((mod4Mask, xK_f), spawn "firefox -P -no-remote")
 
+    -- Emacs
+    , ((modm, xK_e), spawn "emacs")
+
     -- Open latest C++ specification draft with evince
     , ((modm, xK_semicolon), spawn "evince ~/doc/c++/newer.pdf")
 
