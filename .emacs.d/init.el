@@ -229,7 +229,7 @@
   '(lambda ()
      (define-key term-mode-map "\C-c\C-l" 'term-mode-switch)
      (define-key term-raw-map "\C-c\C-l" 'term-mode-switch)
-     (define-key term-raw-map [(meta backspace)] 'backward-kill-word-with-term)
+     (define-key term-raw-map (kbd "M-DEL") 'backward-kill-word-with-term)
      (define-key term-raw-map [(control backspace)] 'backward-kill-word-with-term)
      (define-key term-raw-map "\M-d" 'kill-word-with-term)
      (define-key term-raw-map "\C-k" 'kill-line-with-term)
@@ -270,7 +270,7 @@
  (lambda () 
    ;; C-/のundoでredoしないようにする
    (require 'undo-tree)
-   (global-set-key [(control /)] 'undo-tree-undo)
+   (global-set-key (if window-system [(control /)] "\C-_") 'undo-tree-undo)
    (global-set-key "\C-\\" 'undo-tree-redo)
    (global-set-key "\C-xu" 'undo-tree-visualize)))
 
