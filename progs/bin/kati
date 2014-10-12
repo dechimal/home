@@ -1,6 +1,6 @@
 #!/bin/sh
 
-while test $PWD != / -a \! -f .makeroot; do
+while test "$PWD" != / -a \! -f .makeroot; do
       cd ..
 done
 
