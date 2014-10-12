@@ -147,7 +147,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     , ((ms,   xK_z), sendMessage M.MagnifyLess)
     
     -- Screen shot
-    , ((modm, xK_Print), spawn "scrot ~/ss-`date +%Y-%m-%d-%T`.png")
+    , ((modm, xK_Print), spawn "gnome-screenshot -f ~/ss-`date +%Y-%m-%d-%T`.png")
 
     -- Firefox
     , ((mod4Mask, xK_f), spawn "firefox -P -no-remote")
@@ -167,15 +167,12 @@ myKeys conf@(XConfig {XMonad.modMask = modm, XMonad.terminal = term}) =
     -- Show Clock
     , ((modm, xK_d), spawn "date '+%Y/%m/%d(%a) %T ' | dzen2 -p 3 -ta r -e button1=exit")
 
-    -- Quit xmonad
-    , ((ms,xK_q), io (exitWith ExitSuccess))
-
     -- Restart xmonad
     , ((modm, xK_q), spawn "xmonad --recompile && xmonad --restart")
       
     -- Control sound volume
-    , ((modm, xK_F11), spawn "amixer -q sset Headphone 5%-")
-    , ((modm, xK_F12), spawn "amixer -q sset Headphone 5%+")
+    , ((modm, xK_F11), spawn "amixer -q sset Master 2%-")
+    , ((modm, xK_F12), spawn "amixer -q sset Master 2%+")
     ]
     ++
 
@@ -338,6 +335,7 @@ myLogHook = composeAll
                        , className =? "Gimp"
                        , className =? "Inkscape"
                        , windowRole =? "vlc-video"
+                       , windowRole =? "vlc-main"
                        ]
 
 ------------------------------------------------------------------------
