@@ -1,14 +1,15 @@
 #!/bin/zsh
 
 TRAPINT() {
-  rm -rf $temp
+  rm -rf $temp $temp2
+  exit
 }
 TRAPTERM() {
-  rm -rf $temp
+  rm -rf $temp $temp2
+  exit
 }
 
 hyphon=0
-with_hyphon=0
 for i; do
   ((hyphon++))
   if [[ $i == '--' ]]; then
@@ -17,19 +18,30 @@ for i; do
   fi
 done
 
-if [[ with_hyphon == 1 ]]; then
+if [[ -n $with_hyphon ]]; then
   files=($*[(($hyphon+1)),-1])
   opts_before_hyphon=("$@[1,(($hyphon-1))]")
 else
   opts_before_hyphon=("$@")
 fi
 
-files=($files `grep "$opts_before_hyphon[@]" -l`)
-files=($files `grep "$opts_before_hyphon[@]" -L`)
+set -A opts2
+
+for i in "$opts_before_hyphon[@]"; do
+  if [[ $i == '--sjis' ]]; then
+    sjis=1
+  else
+    opts2[(($#opts2+1))]=$i
+  fi
+done
+
+temp2=`mktemp -t zipgrep.XXXXXXXXXXXX`
+files=($files `grep "$opts2[@]" -l $temp2`)
+files=($files `grep "$opts2[@]" -L $temp2`)
 
 set -A grep_opts
 
-for i in "$opts_before_hyphon[@]"; do
+for i in "$opts2[@]"; do
   for j in $files; do
     [[ $i == $j ]] && continue 2
   done
@@ -39,9 +51,19 @@ done
 temp=`mktemp -dt zipgrep.XXXXXXXXXXXX`
 
 for i in $files; do
+  if [[ $i == temp2 ]]; then continue; fi
   mime=`file -bi $i`
   if [[ -z ${mime##application/zip*} ]]; then
-    unzip -qd $temp $i
+    unzip-sjis.sh $i $temp
+    if [[ -n $sjis ]]; then
+      find $temp | while read j; do
+        mime2=`file -bi $j`
+        if [[ $mime2 == 'text/plain; charset=unknown-8bit' ]]; then
+          uconv -f CP932 $j --callback escape-c >$temp2
+          mv $temp2 $j
+        fi
+      done
+    fi
     grep "$grep_opts[@]" -r $temp | sed "s,$temp,$i/#!,"
     rm -rf $temp/*
   else
@@ -50,4 +72,4 @@ for i in $files; do
 done
 
 
-rm -rf $temp
+rm -rf $temp $temp2
