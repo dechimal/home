@@ -8,23 +8,28 @@ TRAPKILL() { fin }
 
 dir=`mktemp -dt auto-minimize.XXXXXXXXXX`
 export TMPDIR=$dir
-tmp=$dir/src.ii
 script=$dir/check.sh
+
 src=$1
 msg=$2
+tmp=$dir/$src
+
+shift 2
 
 cat <<EOF >$script
-g++ -std=gnu++0x -O0 -Wfatal-errors -w -S "$tmp" 2>&1 | grep -q "$msg"
+#!/bin/bash
+g++-trunk -std=gnu++1y -O0 -Wfatal-errors -w "$@" "\${1:-$tmp}" 2>&1 | grep -q "$msg"
+exit ${PIPESTATUS[1]}
 EOF
 
-chmod 755 $script
+chmod +x $script
 
 cp $src $tmp
 
-for i in {0..10}; do
-  multidelta -level=$i $script $tmp <<EOF
-EOF
-done
+(cd $dir; for i in {0..10}; do
+  multidelta -level=$i $script $tmp
+  multidelta -level=$i $script $tmp
+done)
 
 cp $tmp $src.result
 
