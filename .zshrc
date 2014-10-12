@@ -66,7 +66,7 @@ alias ldcrontab='crontab ~/.crontab'
 alias xlock='xlock -mode blank'
 alias ll='ls -l'
 alias CP932='iconv -f cp932'
-alias scrot-rect='sleep 3; scrot -s ~/ss-`date +%Y-%m-%d-%T`.png'
+alias ss-rect='sleep 3; gnome-screenshot -af ~/ss-`date +%Y-%m-%d-%T`.png'
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
 export EDITOR=emacs${WINDOWID:+client}
