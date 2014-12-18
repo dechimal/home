@@ -1,0 +1,3 @@
+#!/bin/zsh
+
+zsh -c "sleep $1; echo $2 | dzen2 -e 'button1=exit;onstart=grabkeys;key_Escape=exit;key_Return=exit' -ta r -p" &>/dev/null &|
