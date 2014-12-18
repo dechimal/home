@@ -1,7 +1,6 @@
 
 (setq load-path
-  (append '("~d/.emacs.d"
-            "/usr/share/emacs/site-lisp/yas") load-path))
+  (append '("/usr/share/emacs/site-lisp/yas") load-path))
 (setq package-archives
       '(("elpa" . "http://tromey.com/elpa/")
         ("marmalade" . "http://marmalade-repo.org/packages/")
