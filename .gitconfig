@@ -4,9 +4,10 @@
 [branch]
 	autosetuprebase = always
 [alias]
-	out = checkout
 	st = status
 	amend = commit --amend
 	tree = log --graph
+	cm = commit
+	co = checkout
 [push]
         default = simple
