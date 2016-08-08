@@ -34,12 +34,6 @@ import qualified XMonad.Util.WindowProperties as P
 import qualified XMonad.Hooks.FadeInactive as F
 import qualified XMonad.Hooks.InsertPosition as I
 
-instance Applicative Query where
-    pure = return
-    f <*> m = do f' <- f
-                 x <- m
-                 return $ f' x
-
 -- The default number of workspaces (virtual screens) and their names.
 -- By default we use numeric strings, but any string may be used as a
 -- workspace name. The number of workspaces is determined by the length
@@ -294,7 +288,7 @@ myManageHook = composeAll
                           , className =? "Iptux"] "im"
                , moveToWS [ className =? "Smplayer"
                           , windowRole =? "vlc-video"] "video"
-               , moveToWS [ className =? "Gimp"] "gimp"
+               -- , moveToWS [ className =? "Gimp"] "gimp"
                , windowType <==> atom "_NET_WM_WINDOW_TYPE_TOOLBAR" --> doIgnore
                , firefoxHooks
                ]
@@ -326,7 +320,7 @@ myEventHook= mempty
 
 myLogHook = composeAll
             [ fadeHook
-            , setCurrentWallPaper
+            -- , setCurrentWallPaper
             ]
     where fadeHook = F.fadeOutLogHook $
                      F.fadeIf (F.isUnfocused <&&> (fmap (not . or) $ sequence fadeExcept))
@@ -426,17 +420,17 @@ windowType = do
 (</=>) = liftA2 (/=)
 infix 4 <==>, </=>
 
-setCurrentWallPaper :: X ()
-setCurrentWallPaper = do
-  xstate <- get
-  let ws = windowset xstate
-      tag = W.tag $ W.workspace $ W.current ws
-      wptable = [ ("main", "~/doc/picture/wp-handmade/th2/wp-th2-fullhd.png")
-                , ("gimp", "~/doc/picture/wp-handmade/aznyan/aznyan.png")
-                , ("im", "~/doc/picture/wp-handmade/aznyan/aznyan4.png")
-                , ("sub", "~/doc/picture/wp-handmade/dechimal/dechimal.png")
-                , ("video", "~/doc/picture/wp-handmade/th2/wp-th2-fullhd-yellow.png")
-                ]
-      wpname = fromMaybe (snd $ head $ wptable) $ lookup tag wptable
-  -- spawn $ "hsetroot -center " ++ wpname -- hsetroot work poor when change to no window workspace.
-  return ()
+-- setCurrentWallPaper :: X ()
+-- setCurrentWallPaper = do
+--   xstate <- get
+--   let ws = windowset xstate
+--       tag = W.tag $ W.workspace $ W.current ws
+--       wptable = [ ("main", "~/doc/picture/wp-handmade/th2/wp-th2-fullhd.png")
+--                 , ("gimp", "~/doc/picture/wp-handmade/aznyan/aznyan.png")
+--                 , ("im", "~/doc/picture/wp-handmade/aznyan/aznyan4.png")
+--                 , ("sub", "~/doc/picture/wp-handmade/dechimal/dechimal.png")
+--                 , ("video", "~/doc/picture/wp-handmade/th2/wp-th2-fullhd-yellow.png")
+--                 ]
+--       wpname = fromMaybe (snd $ head $ wptable) $ lookup tag wptable
+--   -- spawn $ "hsetroot -center " ++ wpname -- hsetroot work poor when change to no window workspace.
+--   return ()
