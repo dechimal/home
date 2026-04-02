@@ -1,0 +1,26 @@
+#!/bin/bash
+
+compositor=start-hyprland
+# compositor="sway --unsupported-gpu"
+# compositor=river
+
+export SKKSERVER=localhost
+export LANG=ja_JP.UTF-8
+export LC_CTYPE=ja_JP.UTF-8
+
+export GTK_IM_MODULE=uim
+export QT_IM_MODULE=uim
+export XMODIFIERS=@im=uim
+export XDGCURRENT_DESKTOP=$compositor
+export XDG_SESSION_TYPE=wayland
+
+# export SDL_AUDIODRIVER=alsa
+
+export MOZ_USE_WAYLAND=1
+export GDK_BACKEND=wayland
+
+# for hyprland with nvidia
+export LIBVA_DRIVER_NAME=nvidia
+export __GLX_VENDOR_LIBRARY_NAME=nvidia
+
+$compositor "$@" 2>61 | tee .waycomp.log

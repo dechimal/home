@@ -1,14 +1,10 @@
-
-
 ;; Added by Package.el.  This must come before configurations of
 ;; installed packages.  Don't delete this line.  If you don't want it,
 ;; just comment it out by adding a semicolon to the start of the line.
 ;; You may delete these explanatory comments.
 (require 'package)
-(setq package-archives
-      '(("elpa" . "http://tromey.com/elpa/")
-        ("marmalade" . "http://marmalade-repo.org/packages/")
-        ("melpa" . "http://melpa.milkbox.net/packages/")))
+(add-to-list 'package-archives
+      '("melpa" . "http://melpa.org/packages/") t)
 
 (package-initialize)
 
@@ -30,6 +26,27 @@
 (add-hook 'comint-output-filter-functions
   'comint-watch-for-password-prompt)
 
+(defun find-file-around (f &rest args)
+  (let ((filespec (car args)) filename lineno buffer)
+    (if (equal (string-match "^\\([^:]*\\):\\(.*\\)$" filespec) ())
+        (apply f args)
+      (setq filename (match-string 1 filespec))
+      (if (not (eq filename "/ssh"))
+          (setq lineno (string-to-number (match-string 2 filespec)))
+        (if (not (equal (string-match "^\\([^:]*:[^:]*\\):\\(.*\\)$" filename) ()))
+            (apply f args)
+          (setq filename (concat "/ssh:" (match-string 2 filename)))
+          (setq lineno (string-to-number (match-string 2 filename)))
+          ))
+      (setq buffer (apply f (cons filename (cdr args))))
+      (goto-line lineno buffer)
+      )
+    )
+  )
+
+(advice-add 'find-file :around 'find-file-around)
+(advice-add 'find-altenative-file :around 'find-file-around)
+
 (if window-system
   (progn
     (set-face-background 'region "Blue")
@@ -46,56 +63,60 @@
 
     (set-fontset-font (frame-parameter nil 'font) '(#x80 . #x7ffff) "Migu 2M-10" nil)
 
-    (global-unset-key "\C-z")))
+    (global-unset-key "\C-z")
+    (global-unset-key "\C-x\C-z")
+    ))
 
 ; 行間設定
 (setq-default line-spacing 0)
 
 ;; スマートインデントを殺す
 (setq c-syntactic-indentation nil)
+(setq c-electric-flag nil)
 
 (global-set-key "\C-h" 'delete-backward-char)
 
 ;; c mode hook
-(load "font-lock")
-(defun my-c++-mode-hook ()
-  (setq c-set-style "stroustrup")
-  (setq c-basic-offset 4)
-  (setq c-auto-newline nil)
+(defun my-c-mode-hook ()
+  (setq-local c-set-style "stroustrup")
+  (setq-local c-basic-offset 4)
+  (setq-local c-auto-newline nil)
   (c-set-offset 'innamespace 0)
-  (dolist (key '(";" "{" "<" ">" "," "(" ")" "\C-c\C-c" "\C-c\C-a" "\C-c\C-s"))
-    (define-key c++-mode-map key nil))
-  (define-key c++-mode-map [(control :)] 'c-scope-operator)
-  (define-key c++-mode-map "\C-i" 'deepen-line-or-region)
-  (define-key c++-mode-map (kbd "<backtab>") 'shallow-line-or-region)
-  (define-key c++-mode-map "\C-m" 'newline-and-indent)
-  (define-key c++-mode-map "\C-xw" 'wandbox-compile-buffer-or-region-with-detected-lang)
-  ;; add C++11's keywords to keyword list, and mute typename followed by eol, ::type
-  (font-lock-add-keywords nil
-    '(("\\<\\(typename\\)$\\|\\(\\:\\:type\\)\\>" . 'font-lock-silent-face)
-      ("\\<\\(alignof\\|alignas\\|constexpr\\|decltype\\|export\\|final\\|noexcept\\|override\\|static_assert\\|thread_local\\)\\>" . font-lock-keyword-face)
-      ("\\<\\(nullptr\\|\\(-?[[:digit:]]+\\(\\.[[:digit:]]+\\(e[+-]?[[:digit:]]+\\)?\\)?\\|0x[[:xdigit:]]+\\)\\([[:alpha:]_][[:alnum:]_]*\\)?\\)\\>" . font-lock-constant-face)
-      ("\\<\\(char\\(8\\|16\\|32\\)_t\\)\\>" . font-lock-builtin-face)))
-  (make-local-variable 'font-lock-maximum-decoration)
-  (setcdr (assoc 'c++-mode font-lock-maximum-decoration) 2)
-  (font-lock-fontify-buffer)
   (c-toggle-electric-state t))
 
-(add-hook 'c++-mode-hook
-  'my-c++-mode-hook)
+(defun my-java-mode-hook ()
+  (setq-local c-basic-offset 4)
+  (setq-local c-auto-newline nil)
+  (setq-local indent-tabs-mode t)
+  (setq-local tab-width 4)
+  )
 
-(defface font-lock-silent-face
-  '((t :foreground "#448844"))
-  "A face for more silent words.")
+(with-eval-after-load 'cc-mode
+  (dolist (mode-map (list c++-mode-map awk-mode-map c-mode-map java-mode-map))
+    (dolist (key '(";" "{" "}" "<" ">" "," "(" ")" "\C-c\C-c" "\C-c\C-a" "\C-c\C-s"))
+      (define-key mode-map key 'self-insert-command)
+      )
+    (define-key mode-map [(control :)] 'c-scope-operator)
+    (define-key mode-map "\C-i" 'deepen-line-or-region)
+    (define-key mode-map (kbd "<backtab>") 'shallow-line-or-region)
+    (define-key mode-map "\C-m" 'newline-and-indent)
+    )
+  )
+
+(add-hook 'c-mode-hook 'my-c-mode-hook)
+(add-hook 'c++-mode-hook 'my-c-mode-hook)
+(add-hook 'java-mode-hook 'my-java-mode-hook)
 
 (defun offset-unit ()
-  (let ((e (assoc major-mode '(('c++-mode . 'c-basic-offset)
-                               ('cc-mode . 'c-basic-offset)
-                               ('c-mode . 'c-basic-offset)
-                               ('java-mode . 'c-basic-offset)
-                               ('php-mode . 'c-basic-offset)
-                               ('rust-mode . 'rust-indent-offset)))))
-    (if e (car e) 4)
+  (let ((e (assoc major-mode '((c++-mode . c-basic-offset)
+                               (cc-mode . c-basic-offset)
+                               (c-mode . c-basic-offset)
+                               (java-mode . c-basic-offset)
+                               (php-mode . c-basic-offset)
+                               (rust-mode . rust-indent-offset)
+                               (js-mode . js-indent-level)
+                               (html-mode . sgml-basic-offset)))))
+    (setq e (if e (eval (cdr e)) 4))
     ))
 
 (defun deepen-line-or-region (&optional arg region)
@@ -104,39 +125,43 @@
          (use-region-p)))
   (let ((init nil)
         (beg nil)
+        (end nil)
         (indent nil)
         (blank-line nil)
         (line-end nil)
-        (diff nil)
+        (diff 0)
         (depth (* (offset-unit) arg)))
-    (if (not region)
+    (if region
         (progn
-          (save-excursion
-            (setq init (point))
-            (beginning-of-line)
-            (search-forward-regexp "[[:space:]]*")
-            (setq beg (match-beginning 0))
-            (setq end (match-end 0))
-            (setq blank-line
-                  (and (eq beg (line-beginning-position)) (eq end (line-end-position))))
-            (setq indent (< init end))
-            (end-of-line)
-            (setq line-end (point))
-            (insert-char ?a)
-            (indent-code-rigidly (line-beginning-position) (line-end-position) depth)
-            (delete-char -1)
-            (setq diff (- (point) line-end))
-            )
-          (cond
-           (blank-line
-            (end-of-line))
-           (indent
-            (goto-char init))
-           (t
-            (goto-char (+ init diff)))
-           ))
-      (indent-code-rigidly (region-beginning) (region-end) depth)
-      (setq deactivate-mark nil)
+          (indent-code-rigidly (region-beginning) (region-end) depth)
+          (setq deactivate-mark nil)
+          )
+      (save-excursion
+        (setq init (point))
+        (beginning-of-line)
+        (search-forward-regexp "[ 	]*")
+        (setq beg (match-beginning 0))
+        (setq end (match-end 0))
+        (when (or (not (eq beg end)) (> depth 0))
+          (setq blank-line
+                (and (eq beg (line-beginning-position)) (eq end (line-end-position))))
+          (setq indent (< init end))
+          (end-of-line)
+          (setq line-end (point))
+          (insert-char ?a)
+          (indent-code-rigidly (line-beginning-position) (line-end-position) depth)
+          (delete-char -1)
+          (setq diff (- (point) line-end))
+          )
+        )
+      (cond
+       (blank-line
+        (end-of-line))
+       (indent
+        (goto-char init))
+       (t
+        (goto-char (+ init diff)))
+       )
       )))
 
 (defun shallow-line-or-region (&optional arg region)
@@ -154,7 +179,7 @@
     (save-excursion
       (while loop
         (beginning-of-line)
-        (search-forward-regexp "^[[:space:]]*")
+        (search-forward-regexp "^[ 	]*")
         (if (eq loop 'init)
             (setq indent-pos (match-end 0)))
         (setq loop (eq (line-end-position) (match-end 0)))
@@ -173,32 +198,19 @@
              (line-beginning-position)
              (point)))
            (match-result
-            (string-match-p "^[[:space:]]*$" leading)))
+            (string-match-p "^[ 	]*$" leading)))
       (if (numberp match-result)
           (delete-region (line-beginning-position) indent-pos)))
     (insert-char 10 arg)
-    (insert-string indent-str)
+    (insert-before-markers indent-str)
     ))
-
-(setq font-lock-maximum-decoration
-      '((c++-mode . nil) (t . t)))
 
 ;; kill smart indentation
 (setq c-syntactic-indentation nil)
 
-(add-hook 'java-mode-hook
-  '(lambda ()
-     (setq c-basic-offset 4)
-     (setq c-auto-newline nil)
-     (setq indent-tabs-mode t)
-     (setq tab-width 4)
-     (define-key java-mode-map "\C-i" 'deepen-line-or-region)
-     (define-key java-mode-map (kbd "<backtab>") 'shallow-line-or-region)))
-
-; ruby-mode hook
-(add-hook 'ruby-mode-hook
-  '(lambda ()
-     (define-key ruby-mode-map "\C-i" nil)))
+;; ruby-mode hook
+(with-eval-after-load 'ruby-mode
+  (define-key ruby-mode-map "\C-i" nil))
 
 (setq auto-mode-alist
       (append
@@ -207,7 +219,8 @@
           ("\\.h$" . c++-mode)
           ("\\.cs$" . c++-mode)
           ("\\.hs$" . haskell-mode)
-          ("\\.ipp$" . c++-mode))
+          ("\\.ipp$" . c++-mode)
+          ("PKGBUILD$" . sh-mode))
         auto-mode-alist))
 
 ; インデントでタブ文字を使わない
@@ -225,6 +238,7 @@
 ; C-tab とか C-S-tab でバッファ切り替え
 (global-set-key [C-tab] 'next-buffer)
 (global-set-key [C-S-tab] 'previous-buffer)
+(global-set-key [C-iso-lefttab] 'previous-buffer)
 
 ;; クリップボード
 (global-set-key "\C-c\C-c" 'clipboard-kill-ring-save)
@@ -237,19 +251,13 @@
 (global-set-key [C-up] 'windmove-up)
 (global-set-key [C-down] 'windmove-down)
 
-; キーボードマクロ連続再生
-(require 'easy-mmode)
-(easy-mmode-define-minor-mode repeat-kbd-macro-mode
-                              "keyboard macro repetition mode."
-                              nil
-                              nil
-                              '(("\C-r" . call-last-kbd-macro)
-                                ("\C-g" . repeat-kbd-macro-mode)))
-
-(global-set-key "\C-c\C-r" (lambda ()
-                             (interactive)
-                             (repeat-kbd-macro-mode)
-                             (call-last-kbd-macro)))
+;; 全体を選択
+(defun copy-whole-buffer ()
+  (interactive)
+  (save-mark-and-excursion
+    (kill-ring-save (point-min) (point-max)))
+  )
+(global-set-key "\C-x\C-a" 'copy-whole-buffer)
 
 ; ウィンドウ切り替えを変更
 (global-set-key "\C-o" 'other-window)
@@ -257,78 +265,40 @@
                                        (interactive)
                                        (other-window -1)))
 
-;; term-modeでterminalのkill-ringを変更する際emacs側のも変更する
-
-(defun backward-kill-word-with-term ()
-  (interactive)
-  (save-excursion
-    (let ((begin (point)))
-      (backward-word)
-      (kill-ring-save begin (point))))
-  (term-send-backward-kill-word))
-
-(defun kill-word-with-term ()
-  (interactive)
-  (save-excursion
-    (let ((begin (point)))
-      (forward-word)
-      (kill-ring-save begin (point))))
-  (term-send-forward-kill-word))
-
-(defun kill-line-with-term ()
-  (interactive)
-  (save-excursion
-    (let ((begin (point)))
-      (move-end-of-line 1)
-      (kill-ring-save begin (point))))
-  (term-send-raw-string "\C-k"))
-
-(defun undo-with-term ()
-  (interactive)
-  (term-send-raw-string "\C-_"))
-
-(global-set-key "\C-xt" 'multi-term)
-
-(add-hook 'term-mode-hook
-  '(lambda ()
-     (define-key term-mode-map "\C-c\C-l" 'term-mode-switch)
-     (define-key term-raw-map "\C-c\C-l" 'term-mode-switch)
-     (define-key term-raw-map (kbd "M-DEL") 'backward-kill-word-with-term)
-     (define-key term-raw-map [(control backspace)] 'backward-kill-word-with-term)
-     (define-key term-raw-map "\M-d" 'kill-word-with-term)
-     (define-key term-raw-map "\C-k" 'kill-line-with-term)
-     (define-key term-raw-map [(control /)] 'undo-with-term)
-     (define-key term-raw-map "\C-y" 'term-paste)
-     (define-key term-raw-map "\C-o" 'other-window)
-     (define-key term-raw-map "\C-q" 'quoted-insert)
-     (define-key term-raw-map "\C-g" 'keyboard-quit)))
-
-;; 起動時にnoteを開いておく
-(find-file "~/note")
-
 ;; C-cC-aで全範囲選択して、クリップボードにコピーする
-(global-set-key "\C-c\C-a"
-  '(lambda ()
-     (interactive)
-     (save-excursion
-       (clipboard-kill-ring-save (point-min-marker) (point-max-marker)))))
+(defun clipboard-save-whole-buffer ()
+  (interactive)
+  (save-mark-and-excursion
+    (clipboard-kill-ring-save (point-min-marker) (point-max-marker))))
+(global-set-key "\C-c\C-a" 'clipboard-save-whole-buffer)
 
 ;; emacsclientを使えるようにする
-(if window-system
-    (server-start))
+(if window-system (server-start))
 
 ;; バックアップを作らないようにする
 (setq make-backup-files nil)
+(setq auto-save-default nil)
 
 ;; 左端に行番号を表示する
-(setq-default global-linum-mode t)
-(global-linum-mode t)
+(setq-default global-display-line-numbers-mode t)
+(global-display-line-numbers-mode t)
 
 ;; 文字コード
 (set-default-coding-systems 'utf-8-unix)
 
+;; kill emacs
+(global-unset-key "\C-x\C-c")
+(global-set-key "\C-x\C-c\C-c" 'save-buffers-kill-terminal)
+
 ;; make
-(global-set-key "\C-xm" '(lambda () (interactive) (compile "make -B")))
+(global-unset-key "\C-xm")
+(global-set-key "\C-xmb" '(lambda ()
+                           (interactive)
+                           (compile "
+CFLAGS=-fdiagnostics-color=never CXXFLAGS=-fdiagnostics-color=never LDFLAGS=-fdiagnostics-color=never kati")))
+(global-set-key "\C-xmt" '(lambda ()
+                           (interactive)
+                           (compile "make -B test")))
 
 ;; gdb
 (setq-default gdb-many-window t)
@@ -337,57 +307,20 @@
 ;; query-replace-regexpしようとしてasync shell commandになるのを防ぐ
 (global-set-key "\M-&" 'query-replace)
 
-;; terminal
-(require 'multi-term)
-
-(defun term-mode-switch ()
-  (interactive)
-  (if (term-in-char-mode)
-      (term-line-mode)
-    (if (term-in-line-mode)
-        (term-char-mode))))
-
-(setq multi-term-program "/bin/zsh")
-(setq multi-term-buffer-name "term")
-(add-to-list 'term-unbind-key-list "M-x")
-
-(setq system-uses-terminfo nil)
-
 ;; haskell-mode-hook
 (require 'haskell-mode)
-(add-hook 'haskell-mode-hook
-          '(lambda ()
-             (turn-on-haskell-indent)))
+(with-eval-after-load 'haskell-mode
+  (turn-on-haskell-indent))
 
 ;; C-/のundoでredoしないようにする
 (require 'undo-tree)
 (global-set-key (if window-system [(control /)] "\C-_") 'undo-tree-undo)
-(global-set-key "\C-\\" 'undo-tree-redo)
+(global-set-key [(control ?\\)] 'undo-tree-redo)
 (global-set-key "\C-xu" 'undo-tree-visualize)
 
-;; auto-complete
-(require 'auto-complete-config)
-
-(ac-config-default)
-(define-key ac-mode-map [(control .)] 'auto-complete)
-(setq ac-use-menu-map t)
-(define-key ac-menu-map "\C-p" 'ac-previous)
-(define-key ac-menu-map "\C-n" 'ac-next)
-(ac-set-trigger-key "TAB")
-
-(setq ac-auto-start nil)
-(setq ac-trigger-commands (append (list 'delete-char 'backward-char) ac-trigger-commands))
-
-(add-hook 'c++-mode-hook
-          (lambda ()
-            (make-local-variable 'ac-sources)
-            (make-local-variable 'ac-trigger-commands)
-            (setq ac-trigger-commands (append (list 'c-scope-operator)) ac-trigger-key-commands)
-            ))
-
 ;; jaunte
-(require 'jaunte)
-(global-set-key "\C-c\C-s" 'jaunte)
+(require 'ace-jump-mode)
+(global-set-key (kbd "\C-z") 'ace-jump-word-mode)
 
 ;; wandbox
 (require 'wandbox)
@@ -398,6 +331,7 @@
         (java-mode . "Java")
         (php-mode . "PHP")
         (haskell-mode . "Haskell")))
+
 (defun wandbox-compile-buffer-or-region-with-detected-lang ()
   (interactive)
   (let* ((lang (cdr (assoc major-mode wandbox-lang-alist)))
@@ -408,27 +342,114 @@
     (apply 'wandbox-compile args)))
 
 ;; php-mode
-(require 'php-mode)
-(add-hook 'php-mode-hook
-          (lambda ()
-            (define-key php-mode-map (kbd "<tab>") 'deepen-line-or-region)
-            (define-key php-mode-map "\C-i" 'deepen-line-or-region)
-            (define-key php-mode-map (kbd "<backtab>") 'shallow-line-or-region)))
-
-;; sr-speedbar
-(require 'sr-speedbar)
+(with-eval-after-load 'php-mode
+  (define-key php-mode-map (kbd "<tab>") 'deepen-line-or-region)
+  (define-key php-mode-map "\C-i" 'deepen-line-or-region)
+  (define-key php-mode-map "\C-m" 'newline-witless)
+  (define-key php-mode-map (kbd "<backtab>") 'shallow-line-or-region)
+  )
 
 ;; rust-mode
-(require 'rust-mode)
-(add-hook 'rust-mode-hook
-          (lambda ()
-            (make-local-variable 'electric-indent-mode)
-            (make-local-variable 'electric-indent-chars)
-            (setq electric-indent-mode nil)
-            (setq electric-indent-chars nil)
-            (define-key rust-mode-map "\C-xw" 'wandbox-compile-buffer-or-region-with-detected-lang)
-            (define-key rust-mode-map (kbd "<tab>") 'deepen-line-or-region)
-            (define-key rust-mode-map "\C-i" 'deepen-line-or-region)
-            (define-key rust-mode-map (kbd "<backtab>") 'shallow-line-or-region)
-            (define-key rust-mode-map "\C-m" 'newline-witless)
-            ))
+(with-eval-after-load 'rust-mode
+  (define-key rust-mode-map "\C-xw" 'wandbox-compile-buffer-or-region-with-detected-lang)
+  (define-key rust-mode-map (kbd "<tab>") 'deepen-line-or-region)
+  (define-key rust-mode-map "\C-i" 'deepen-line-or-region)
+  (define-key rust-mode-map (kbd "<backtab>") 'shallow-line-or-region)
+  (define-key rust-mode-map "\C-m" 'newline-witless)
+  )
+
+;; html-mode
+(with-eval-after-load 'sgml-mode
+  (define-key html-mode-map (kbd "<tab>") 'deepen-line-or-region)
+  (define-key html-mode-map "\C-i" 'deepen-line-or-region)
+  (define-key html-mode-map (kbd "<backtab>") 'shallow-line-or-region)
+  (define-key html-mode-map "\C-m" 'newline-witless)
+  )
+
+;; js-mode
+(with-eval-after-load 'js
+  (define-key js-mode-map (kbd "<tab>") 'deepen-line-or-region)
+  (define-key js-mode-map "\C-i" 'deepen-line-or-region)
+  (define-key js-mode-map (kbd "<backtab>") 'shallow-line-or-region)
+  (define-key js-mode-map "\C-m" 'newline-witless)
+  )
+
+;; lisp-mode
+(with-eval-after-load 'lisp-mode
+  (electric-indent-local-mode t)
+  )
+
+;; lisp以外勝手にインデントするな
+(electric-indent-mode -1)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(ediff-window-setup-function 'ediff-setup-windows-plain)
+ '(haskell-mode-hook '(haskell-indentation-mode))
+ '(markdown-command "emacs-markdown-preview")
+ '(markdown-preview-delay-time 0.5)
+ '(org-agenda-files '("/home/d/repos/consh/note.org"))
+ '(package-selected-packages
+   '(cmake-mode graphviz-dot-mode haskell-mode jaunte less lua-mode magit
+                markdown-mode markdown-preview-eww
+                markdown-preview-mode multi-term php-mode rust-mode
+                sr-speedbar undo-tree wandbox yaml-mode))
+ '(safe-local-variable-values '((c-indent-level . 4))))
+
+(global-undo-tree-mode)
+
+;; uim
+;; (require 'uim-leim)
+(require 'uim)
+(when window-system
+  ;; (global-set-key (kbd "<zenkaku-hankaku>") 'toggle-input-method)
+  ;; (set-input-method "japanese-skk-uim")
+  (global-set-key (kbd "<zenkaku-hankaku>") 'uim-mode)
+  (uim-mode-on)
+  )
+
+(defun auto-uim-mode-advice (f &rest args)
+  (let ((r (apply f args)))
+    (if (and
+         (not uim-mode)
+         (not buffer-read-only)
+         (not (eq major-mode 'diff-mode))
+         )
+        ;; (set-input-method "japanese-skk-uim")
+        (uim-mode-on)
+      )
+    r
+  ))
+
+(advice-add 'switch-to-buffer :around 'auto-uim-mode-advice)
+(advice-add 'find-file :around 'auto-uim-mode-advice)
+(advice-add 'find-file-read-only :around 'auto-uim-mode-advice)
+
+(require 'magit)
+
+(setq markdown-preview-stylesheets nil)
+
+(with-eval-after-load 'markdown-mode
+  (define-key markdown-mode-map "\C-c\C-c\C-p" 'markdown-preview-mode)
+  )
+
+;; Xmodmapで keycode 97 = yen underscore が必要
+(global-set-key [(?¥)] 'self-insert-command)
+
+;; 起動時にnote.orgを開いておく
+(find-file "~/note.org")
+
+(load-file (expand-file-name "md-slide-preview/md-slide-preview.el" (file-name-directory load-file-name)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(default ((t (:inherit nil :extend nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight regular :height 113 :width normal :foundry "GOOG" :family "monospace")))))
+
+(when window-system
+  (set-face-attribute 'default nil :foreground "#99ffff")
+  (set-face-attribute 'default nil :background "#113311")
+  )

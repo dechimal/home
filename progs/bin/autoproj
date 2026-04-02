@@ -1,0 +1,62 @@
+#!/bin/bash
+
+set -e
+
+rm -rf autom4te.cache config.h.in configure.scan install-sh missing aclocal.m4 autoscan.log
+
+while test $# -ne 0; do
+    opt=$1
+    param=$2
+    case $opt in
+        -C) cd $param; shift ;;
+        -C*) cd ${opt#-C} ;;
+        --) shift; break ;;
+        -*) echo unrecognized options $opt >&2; exit 1 ;;
+        *) break ;;
+    esac
+    shift
+done
+
+if test -f configure.ac; then
+    eval $(awk '
+      match($0, /^\s*AC_INIT\(\s*\[([^]]+)\]\s*,\s*\[([^]]+)\]\s*,\s*\[([^]]+)\]\s*\)/, a) {
+        print "name=\"" a[1] "\""
+        print "ver=\"" a[2] "\""
+        print "report=\"" a[3] "\""
+      }
+    ' <configure.ac)
+    rm configure.ac
+fi
+name=${name:-${1:-myproj}}
+ver=${var:-${2:-0.1}}
+report=${report:-${3:-nobody@example.org}}
+
+if ! test -f 'Makefile.am'; then
+    echo AUTOMAKE_OPTIONS = foreign >Makefile.am
+fi
+autoscan
+if ! test -f m4/autoproj.m4; then
+    mkdir -p m4
+    {
+        echo 'AC_DEFUN([AUTOPROJ_INIT], ['
+        echo '])'
+    } >m4/autoproj.m4
+fi
+awk -v name=$name -v ver=$ver -v report=$report '
+  /^AC_INIT/ {
+    print "AC_INIT([" name "],[" ver "],[" report "])"
+    next
+  }
+  /^AC_CONFIG_HEADERS/ {
+    print
+    print "AC_CONFIG_MACRO_DIRS([m4])"
+    print "AM_INIT_AUTOMAKE"
+    print "m4_include([m4/autoproj.m4])"
+    print "AUTOPROJ_INIT"
+    next
+  }
+  1
+' <configure.scan >configure.ac
+
+autoreconf -i
+rm -rf autom4te.cache *~

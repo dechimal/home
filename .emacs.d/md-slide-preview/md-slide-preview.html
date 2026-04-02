@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
+    <title>Markdown slide preview</title>
+    ${MD_STYLE}
+    ${MD_JS}
+    <script>
+      ${MD_JS_ONINIT};
+
+      let host = "${WS_HOST}";
+      let port = "${WS_PORT}";
+      let uuid = "${MD_UUID}";
+
+      var socket = new WebSocket(`ws://${host}:${port}`);
+      socket.onopen = () => {
+        console.log("Connection established.");
+        socket.send(`MDPM-Register-UUID: ${uuid}`);
+      };
+      socket.onclose = ev => {
+        if (event.wasClean) {
+          console.log('Connection closed gracefully.');
+        } else {
+          console.log('Connection terminated.');
+        }
+        console.log(`Code: ${ev.code} reason: ${ev.reason}`);
+      };
+      socket.onmessage = ev => {
+          let [_, page_num, content] = /^(\d+);(.*)/s.exec(ev.data);
+          let md_body = document.getElementById('markdown-body');
+          md_body.outerHTML = `<article id="markdown-body" class="markdown-body">${content}</article>`;
+          md_body = document.getElementById('markdown-body');
+          let scripts = [...md_body.querySelectorAll('script')];
+          scripts.values().forEach(script => {
+              let newScript = document.createElement('script');
+              newScript.text = script.text;
+              script.remove();
+              md_body.insertBefore(newScript, null);
+          });
+
+          let page = document.querySelector(`.page:nth-child(${page_num})`);
+          if (page) page.scrollIntoView();
+          ${MD_JS_ONUPDATE}
+      };
+      socket.onerror = function(error) {
+          console.log("Error: " + error.message);
+      };
+    </script>
+  </head>
+  <body>
+    <article id="markdown-body" class="markdown-body">
+      <p>Markdown slide preview</p>
+    </article>
+  </body>
+</html>

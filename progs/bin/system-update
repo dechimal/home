@@ -1,0 +1,9 @@
+#!/bin/sh
+
+(
+    set -e
+    sudo pacman -Sy --needed archlinux-keyring
+    trizen -Su
+)
+setxkbmap -layout jp
+xmodmap ~/.Xmodmap
