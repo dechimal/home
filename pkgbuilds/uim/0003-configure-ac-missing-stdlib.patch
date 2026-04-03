@@ -1,0 +1,26 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -451,6 +451,7 @@
+ 	AC_RUN_IFELSE(
+ 		[AC_LANG_SOURCE([[
+ #include <stdio.h>
++#include <stdlib.h>
+ /* Why is this so damn hard? */
+ #ifdef __GNUC__
+ # undef __GNUC__
+@@ -595,6 +596,7 @@
+ 	AC_RUN_IFELSE(
+ 		[AC_LANG_SOURCE([[
+ #include <stdio.h>
++#include <stdlib.h>
+ int main(void){char b[5];snprintf(b,5,"123456789");return b[4]!='\0';}
+ 		]])],
+ 		[AC_MSG_RESULT(yes)],
+@@ -619,6 +621,7 @@
+ #include <sys/types.h>
+ #include <stdio.h>
+ #include <stdarg.h>
++#include <stdlib.h>
+ 
+ int x_snprintf(char *str,size_t count,const char *fmt,...)
+ {

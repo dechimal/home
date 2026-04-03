@@ -1,0 +1,15 @@
+post_install() {
+    uim-module-manager --unregister-all
+    uim-module-manager --register skk
+    update-utf8-skk-jisyo >/usr/share/skk/SKK-JISYO.utf-8
+}
+
+post_upgrade() {
+    uim-module-manager --unregister-all
+    uim-module-manager --register skk
+    update-utf8-skk-jisyo >/usr/share/skk/SKK-JISYO.utf-8
+}
+
+post_remove() {
+    rm -f /usr/share/skk/SKK-JISYO.utf-8
+}

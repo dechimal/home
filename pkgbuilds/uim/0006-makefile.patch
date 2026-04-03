@@ -1,0 +1,18 @@
+--- a/tables/Makefile.am
++++ b/tables/Makefile.am
+@@ -21,11 +21,11 @@
+ 	UIM_DISABLE_NOTIFY=1
+ 
+ #if MAINTAINER_MODE
+-wb86.scm: $(top_srcdir)/scm/wb86.scm
+-	$(LN_S) $< $@
++wb86.scm: | $(top_srcdir)/scm/wb86.scm
++	$(LN_S) $(top_srcdir)/scm/wb86.scm $@
+ 
+-zm.scm: $(top_srcdir)/scm/zm.scm
+-	$(LN_S) $< $@
++zm.scm: | $(top_srcdir)/scm/zm.scm
++	$(LN_S) $(top_srcdir)/scm/zm.scm $@
+ 
+ .scm.table:
+ 	$(MAKE) $(AM_MAKEFLAGS) -C $(top_builddir)/sigscheme && \

@@ -1,0 +1,25 @@
+From 9a6062dae3744b906cc2ccfeab1dc76fd3708088 Mon Sep 17 00:00:00 2001
+From: d <d.g.feat.th2iinchoiincho@gmail.com>
+Date: Mon, 23 Mar 2026 00:21:37 +0900
+Subject: [PATCH 2/2] Input Method: correct popup box
+
+---
+ src/managers/input/InputMethodPopup.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/managers/input/InputMethodPopup.cpp b/src/managers/input/InputMethodPopup.cpp
+index 9a891213..90c97d41 100644
+--- a/src/managers/input/InputMethodPopup.cpp
++++ b/src/managers/input/InputMethodPopup.cpp
+@@ -117,7 +117,7 @@ void CInputPopup::updateBox() {
+     if (popupOverflow > 0)
+         popupOffset.x -= popupOverflow;
+ 
+-    CBox cursorBoxLocal({-popupOffset.x, -popupOffset.y}, cursorBoxParent.size());
++    CBox cursorBoxLocal({popupOffset.x, popupOffset.y}, cursorBoxParent.size());
+     m_popup->sendInputRectangle(cursorBoxLocal);
+ 
+     CBox       popupBoxParent(cursorBoxParent.pos() + popupOffset, currentPopupSize);
+-- 
+2.53.0
+

@@ -1,0 +1,25 @@
+From df08c0afec5f1d77280dbc69d123d473fc40414f Mon Sep 17 00:00:00 2001
+From: d <d.g.feat.th2iinchoiincho@gmail.com>
+Date: Sat, 21 Mar 2026 19:57:05 +0900
+Subject: [PATCH 1/2] Master layout: fix SEGV in getNextTarget
+
+---
+ src/layout/algorithm/tiled/master/MasterAlgorithm.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/layout/algorithm/tiled/master/MasterAlgorithm.cpp b/src/layout/algorithm/tiled/master/MasterAlgorithm.cpp
+index 7696f66f..a954fffc 100644
+--- a/src/layout/algorithm/tiled/master/MasterAlgorithm.cpp
++++ b/src/layout/algorithm/tiled/master/MasterAlgorithm.cpp
+@@ -1260,6 +1260,8 @@ SP<ITarget> CMasterAlgorithm::getNextTarget(SP<ITarget> t, bool next, bool loop)
+         return nullptr;
+ 
+     const auto PNODE = getNodeFromTarget(t);
++    if (!PNODE)
++        return nullptr;
+ 
+     auto       nodes = m_masterNodesData;
+     if (!next)
+-- 
+2.53.0
+

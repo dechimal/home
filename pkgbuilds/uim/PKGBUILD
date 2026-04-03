@@ -1,0 +1,146 @@
+# Maintainer: Pierce Thompson <pierce at insprill dot net>
+# Contributor: Carl Smedstad <carl.smedstad at protonmail dot com>
+# Contributor: Gaetan Bisson <bisson@archlinux.org>
+# Contributor: damir <damir@archlinux.org>
+
+_debug=
+_sigscheme_ver=0.9.4
+
+pkgname=uim
+pkgver=1.9.6
+pkgrel=3
+pkgdesc="Multilingual input method library"
+url="https://github.com/uim/uim"
+license=(BSD-3-Clause)
+arch=(x86_64)
+depends=(
+  gcc-libs
+  glibc
+  libedit
+  libxext
+  libxft
+  m17n-lib
+  ncurses
+  sqlite
+  autoconf
+  autoconf-archive # ax_check_compile_flag
+)
+makedepends=(
+  gettext
+  gtk2
+  gtk3
+  intltool
+  qt5-x11extras
+  skk-jisyo
+)
+optdepends=(
+  'gtk2: immodule and helper applications'
+  'gtk3: immodule and helper applications'
+  'qt5-declarative: immodule and helper applications'
+  'qt5-x11extras: immodule and helper applications'
+  'skk-jisyo: input method'
+  'skktools: make SKK jisyo for UTF-8'
+)
+install=uim.install
+
+source=(
+    "$url/releases/download/$pkgver/$pkgname-$pkgver.tar.gz"
+    # upgrade sigscheme with version 0.9.4 since bundled version has memory bug.
+    "https://github.com/uim/sigscheme/releases/download/0.9.4/sigscheme-$_sigscheme_ver.tar.bz2"
+)
+
+sha256sums=(
+    '5436f5507b64c772da64e8ad7e598cb8b32dc9e5617e01d54e4a71eaf5566a3d'
+    '2d78bca81e9d08f4f28fcaa13eb8ce50951695468d9fdf1292438180ed6b4ed3'
+)
+
+source+=(
+    'update-utf8-skk-jisyo'
+    'update-utf8-skk-jisyo.hook'
+    '0001-disable-qt5-applets.patch'
+    '0002-emacs-uim-mode.patch'
+    '0003-configure-ac-missing-stdlib.patch'
+    '0004-autotools-migration.patch'
+    '0005-skk-utf8.patch'
+    '0006-makefile.patch'
+)
+
+sha256sums+=(
+    'fe71a16b693859f9dd0d0237d899d19a3e1ecdcd17c3f97a4a93b9abf0d7e1ad'
+    '4addbb037865e91b043e0002b4bfda786445ac9d32c195a700923b81750597e6'
+    'e2ac71be04167c7d6438d012be0a01192b918bd72c3e9bb28e70cd7dd0fcf512'
+    '3ae9f7a6c9ac4185ac7d87a6b9a039bf95a828300ddfd6c5e8d37d39825b22a3'
+    '921b9484866fbc876b42b063a2de045498bdd8d0d3ff07d8f252ef47ee5fa49c'
+    '70a7a1f8e3b63de46176e3e25e836777e7c73620c8d0f299ee6a92c841cf7b09'
+    '83acf309eec3d0fa6049bdf79694e03bf7a26ffcc952c41129a87e3742d7be7b'
+    'd47620761884217c756419df9126db56279520bcdb4f75b1d05a5c1247f81a13'
+)
+
+options=(
+    ${_debug:+'!strip'}
+)
+
+_src="$pkgname-$pkgver"
+
+prepare() {
+  files='japanese-act.scm japanese-azik.scm japanese-custom.scm japanese-kana.scm japanese-kzik.scm japanese.scm skk.scm skk-custom.scm skk-editor.scm'
+  if ! test -L uim; then
+      ln -s "$_src" uim
+  fi
+  rm -rf "$_src"/sigscheme
+  cp -r "$srcdir/sigscheme-$_sigscheme_ver" "$_src"/sigscheme
+  for orig in $files; do
+    orig="$srcdir/$_src/scm/$orig"
+    iconved=${orig%.scm}-utf8.scm
+    iconv -f EUC-JISX0213 -t UTF-8 <"$orig" | sed 's/ja-/ja-utf8-/g' >"$iconved"
+    case $orig in
+      */skk*.scm)
+        mv "$iconved" "$orig"
+        ;;
+    esac
+  done
+  for file in "$srcdir"/[0-9]*.patch; do
+    msg "patch $file"
+    patch -d "$srcdir/$_src" -p1 <"$file"
+  done
+  cd "$srcdir/$_src"
+  autoreconf -f
+}
+
+build() {
+  mkdir -p "$srcdir"/build
+  cd "$srcdir"/build
+
+  "$srcdir/$_src"/configure \
+    --prefix=/usr \
+    --libexecdir=/usr/lib/uim \
+    --with-qt5-immodule \
+    --with-qt5 \
+    --without-anthy \
+    --with-skk \
+    --disable-kde-applet \
+    --disable-kde4-applet \
+    --disable-kde5-applet \
+    --disable-gnome-applet \
+    --disable-gnome3-applet \
+    ${_debug:+--enable-debug --enable-backtrace}
+
+  make -j$(nproc) configure
+  find -\( -name '*Makefile*' -o -name '*.mk' -\) -exec sed -Ei 's/\s((-W.[^,]'${_debug:+'|-O'}')\S*|-W\b)/ /g' {} +
+  make -j$(nproc)
+}
+
+# check() {
+#   cd "$_archive"
+#
+#   make check
+# }
+
+package() {
+  cd "$srcdir"/build
+
+  make DESTDIR="$pkgdir" install
+  install -Dm644 -t "$pkgdir"/usr/share/licenses/"$pkgname" "$srcdir/$_src"/COPYING
+  install -Dm755 -t "$pkgdir"/usr/bin "$srcdir"/update-utf8-skk-jisyo
+  install -Dm644 -t "$pkgdir"/usr/share/libalpm/hooks "$srcdir"/update-utf8-skk-jisyo.hook
+}

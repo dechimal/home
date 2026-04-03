@@ -1,0 +1,11 @@
+[Trigger]
+Type = Path
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Target = usr/share/skk/SKK-JISYO.*
+
+[Action]
+Description = Updating UTF-8 SKK jisyo...
+When = PostTransaction
+Exec = /usr/bin/update-utf8-skk-jisyo >/usr/share/skk/SKK-JISYO.utf-8

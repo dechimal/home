@@ -1,0 +1,64 @@
+#!/bin/bash
+
+set -e
+
+suffixes=(
+    L
+
+    JIS2
+    JIS2004
+    JIS3_4
+    # M
+    # ML
+    # S
+    assoc
+    # china_taiwan
+    fullname
+    geo
+    itaiji
+    itaiji.JIS3_4
+    jinmei
+    law
+    lisp
+    # mazegaki
+    # okinawa
+    propernoun
+    pubdic+
+    requested
+    station
+    # wrong
+    # wrong.annotated
+)
+
+run() {
+    temp=
+    trap cleanup EXIT
+    temp=$(mktemp -d --tmpdir update-utf8-skk-jisyo.XXXXXXXXXX)
+
+    if ! which skkdic-expr2 >/dev/null 2>&1; then
+        echo skkdic-expr2 not found 1>&2
+        exit 0
+    fi
+    jisyo_list | xargs skkdic-expr2
+}
+
+jisyo_list() {
+    for sfx in "${suffixes[@]}"; do
+        jisyo=/usr/share/skk/SKK-JISYO."$sfx"
+        if test -f "$jisyo"; then
+            iconv -f EUC-JISX0213 -t UTF-8 "$jisyo" >"$temp/${jisyo##*/}"
+            echo +"$temp/${jisyo##*/}"
+        fi
+    done
+}
+
+cleanup() {
+    r=$?
+    set +e
+    if test -n "$temp" -a -d "$temp"; then
+        rm -r "$temp"
+    fi
+    exit $r
+}
+
+run

@@ -1,0 +1,351 @@
+patch from https://keens.github.io/blog/2019/10/20/patchiwoateteuim_skkwoutf_8kasuru/
+--- a/emacs/uim-var.el
++++ b/emacs/uim-var.el
+@@ -132,7 +132,7 @@
+ ;; ("UIM-Language" "Emacs-Language" Emacs-encoding "UIM-Encoding")
+ (defvar uim-lang-code-alist
+   (list 
+-   '("Japanese"              "Japanese"     euc-jp      "EUC-JP")
++   '("Japanese"              "Japanese"     utf-8       "UTF-8")
+    (if (and uim-emacs (>= emacs-major-version 21))
+      '("Korean"              "Korean"       utf-8       "UTF-8")
+      '("Korean"              "Korean"       euc-kr      "EUC-KR"))
+--- a/scm/Makefile.am
++++ b/scm/Makefile.am
+@@ -23,6 +23,8 @@
+  xmload.scm \
+  japanese.scm japanese-azik.scm japanese-kana.scm \
+  japanese-act.scm japanese-kzik.scm japanese-custom.scm \
++ japanese-utf8.scm japanese-azik-utf8.scm japanese-kana-utf8.scm \
++ japanese-act-utf8.scm japanese-kzik-utf8.scm japanese-custom-utf8.scm \
+  anthy.scm anthy-custom.scm anthy-key-custom.scm \
+  anthy-utf8.scm anthy-utf8-custom.scm \
+  canna.scm cannav3-socket.scm canna-custom.scm canna-key-custom.scm \
+--- a/scm/japanese-custom-utf8.scm
++++ b/scm/japanese-custom-utf8.scm
+@@ -408,18 +408,15 @@
+             (car next-input)))
+         (let*
+           ((output (cadr item))
+-            (single-output (car output))
+-            (eucjp->utf8 (lambda (str)
+-                           (iconv-convert "UTF-8" "EUC-JP" str))))
++            (single-output (car output)))
+           (or
+             (and
+               ; ((("k" "a")) ("か" "カ" "ｶ")) -> "か"
+               (string? single-output)
+-              (eucjp->utf8 single-output))
++              single-output)
+             ; ((("k" "y" "a")) (("き" "キ" "ｷ") ("ゃ" "ャ" "ｬ"))) -> "きゃ"
+-            (eucjp->utf8
+-              (string-join
+-                (map first output) "")))))) rule)))
++            (string-join
++             (map first output) ""))))) rule)))
+ 
+ (define ja-utf8-rk-rule-table->rule (lambda (table)
+   (map
+@@ -437,7 +434,7 @@
+                 '("yen"))
+               ; ("ka" "" "か") -> ("k" "a")
+               (map string
+-                (string->list input))))
++                (ja-utf8-string->list input))))
+           (let ((next-input (cadr item)))
+             (or
+               (and
+@@ -446,21 +443,18 @@
+               ; ("kk" "k" "っ") -> "k"
+               (cons next-input '()))))
+         (let* ((output (caddr item))
+-               (utf8->eucjp (lambda (str)
+-                              (iconv-convert "EUC-JP" "UTF-8" str)))
+-               (eucjp-output (utf8->eucjp output))
+-               (eucjp-output-list (string-to-list eucjp-output)))
++               (output-list (ja-utf8-string->list output)))
+           (or
+             (and
+               (=
+-                (length eucjp-output-list) 1)
++                (length output-list) 1)
+               ; ("ka" "" "か") ->  ("か" "カ" "ｶ")
+-              (ja-utf8-find-kana-list-from-rule ja-utf8-rk-rule eucjp-output))
++              (ja-utf8-find-kana-list-from-rule ja-utf8-rk-rule output))
+             ; ("kya" "" "きゃ") -> (("き" "キ" "ｷ") ("ゃ" "ャ" "ｬ"))
+             (map
+               (lambda (char)
+                 (ja-utf8-find-kana-list-from-rule ja-utf8-rk-rule char))
+-                  (reverse eucjp-output-list)))))) table)))
++                  output-list))))) table)))
+ 
+ (define-custom-group 'ja-utf8-rk-rule
+                      (N_ "Japanese Romaji-Kana")
+--- a/scm/japanese-utf8.scm
++++ b/scm/japanese-utf8.scm
+@@ -28,10 +28,10 @@
+ ;;; SUCH DAMAGE.
+ ;;;;
+ 
+-;; Japanese EUC
++;; Japanese UTF-8
+ 
+ (require-extension (srfi 1 2))
+-(require-custom "japanese-custom.scm")
++(require-custom "japanese-custom-utf8.scm")
+ (require "util.scm")
+ 
+ (define ja-utf8-rk-rule-additional
+@@ -374,6 +374,19 @@
+ (define ja-utf8-alnum-space
+   '(" " "　"))
+ 
++(define (ja-utf8-string->list str)
++  (with-char-codec "UTF-8"
++    (lambda ()
++      (map! (lambda (c)
++	      (let ((str (list->string (list c))))
++		(with-char-codec "ISO-8859-1"
++		  (lambda ()
++		    (%%string-reconstruct! str)))))
++	    (string->list str)))))
++
++(define (ja-utf8-string-to-list str)
++  (reverse! (ja-utf8-string->list str)))
++
+ ;;
+ (define ja-utf8-find-rec
+   (lambda (c rule)
+@@ -560,7 +573,7 @@
+   (map (lambda (c)
+          (if (= (string-length c) 1)
+            (list (cons (list c) '()) (list c c c))
+-           (let ((lst (reverse (string-to-list c))))
++           (let ((lst (ja-utf8-string->list c)))
+              (list (cons lst '()) (list (list (car lst) (car lst) (car lst))
+                                         (list (cadr lst) (cadr lst) (cadr lst)))))))
+        (filter (lambda (x) (not (string=? "n" x)))
+@@ -594,15 +607,18 @@
+ 
+ ;;; Convert EUC-JP code to EUC-JP string (cf. ucs->utf8-string in ichar.scm)
+ (define (ja-utf8-euc-jp-code->euc-jp-string code)
+-  (with-char-codec "EUC-JP"
++  (with-char-codec "EUC-JISX0213"
+     (lambda ()
+       (let ((str (list->string (list (integer->char code)))))
+         (with-char-codec "ISO-8859-1"
+           (lambda ()
+             (%%string-reconstruct! str)))))))
+ 
+-;;; Convert JIS code(ISO-2022-JP) to EUC-JP string
+-(define (ja-utf8-jis-code->euc-jp-string state jis1 jis2)
++(define (ja-utf8-euc-jp-code->utf8-string code)
++  (iconv-convert "UTF-8" "EUC-JISX0213" (ja-utf8-euc-jp-code->euc-jp-string code)))
++
++;;; Convert JIS code(ISO-2022-JP) to UTF-8 string
++(define (ja-utf8-jis-code->utf8-string state jis1 jis2)
+   (let
+     ((ej0 (if (eq? state 'jisx0213-plane2) #x8f 0))
+      (ej1 (+ jis1 #x80))
+@@ -613,10 +629,10 @@
+       (if (= ej0 #x8f) ; SS3?
+         (<= #xa1 ej2 #xfe) ; IN_GR94()
+         (<= #xa0 ej2 #xff)) ; IN_GR96()
+-      (ja-utf8-euc-jp-code->euc-jp-string
+-        (+ (* ej0 #x10000) (* ej1 #x100) ej2)))))
++      (ja-utf8-euc-jp-code->utf8-string
++       (+ (* ej0 #x10000) (* ej1 #x100) ej2)))))
+ 
+-;;; Convert reverse string list of JIS code to one EUC-JP kanji string
++;;; Convert reverse string list of JIS code to one UTF-8 kanji string
+ ;;; ("d" "2" "0" "5") -> "亅"
+ (define (ja-utf8-kanji-code-input-jis str-list)
+   (and-let*
+@@ -625,9 +641,9 @@
+      (str2 (string-list-concat (take str-list 2)))
+      (jis1 (string->number str1 16))
+      (jis2 (string->number str2 16)))
+-    (ja-utf8-jis-code->euc-jp-string 'jisx0213-plane1 jis1 jis2)))
++    (ja-utf8-jis-code->utf8-string 'jisx0213-plane1 jis1 jis2)))
+ 
+-;;; Convert reverse string list of Kuten code to one EUC-JP kanji string
++;;; Convert reverse string list of Kuten code to one UTF-8 kanji string
+ ;;; ("3" "1" "-" "8" "4" "-" "1") -> "亅"
+ (define (ja-utf8-kanji-code-input-kuten str-list)
+   (let*
+@@ -637,11 +653,11 @@
+      (ku (string->number (list-ref numlist (if men-exists? 1 0))))
+      (ten (string->number (list-ref numlist (if men-exists? 2 1)))))
+     (and men ku ten (<= 1 men 2)
+-      (ja-utf8-jis-code->euc-jp-string
++      (ja-utf8-jis-code->utf8-string
+         (if (= men 2) 'jisx0213-plane2 'jisx0213-plane1)
+         (+ ku #x20) (+ ten #x20)))))
+ 
+-;;; Convert reverse string list of UCS to one EUC-JP kanji string
++;;; Convert reverse string list of UCS to one UTF-8 kanji string
+ ;;; ("5" "8" "E" "4" "+" "U") -> "亅"
+ (define (ja-utf8-kanji-code-input-ucs str-list)
+   (and-let*
+@@ -655,11 +671,10 @@
+      (valid? ; sigscheme/src/sigschemeinternal.h:ICHAR_VALID_UNICODEP()
+       (or
+         (<= 0 ucs #xd7ff)
+-        (<= #xe000 ucs #x10ffff)))
+-     (utf8-str (ucs->utf8-string ucs)))
+-    (iconv-convert "EUC-JP" "UTF-8" utf8-str)))
++        (<= #xe000 ucs #x10ffff))))
++    (ucs->utf8-string ucs)))
+ 
+-;;; Convert reverse string list to one EUC-JP kanji string
++;;; Convert reverse string list to one UTF-8 kanji string
+ (define (ja-utf8-kanji-code-input str-list)
+   (cond
+     ((string-ci=? (last str-list) "u")
+--- a/scm/skk-dialog.scm
++++ b/scm/skk-dialog.scm
+@@ -84,7 +84,7 @@
+ (define skk-dialog-commit
+   (lambda (dc str)
+     (skk-dialog-commit-char-list
+-     dc (reverse (string-to-list str)))))
++     dc (ja-utf8-string->list str))))
+ 				 
+ (define skk-dialog-commit-raw
+   (lambda (dc key key-state)
+--- a/scm/skk-editor.scm
++++ b/scm/skk-editor.scm
+@@ -82,7 +82,7 @@
+ (define skk-editor-commit
+   (lambda (ec str)
+     (skk-editor-commit-char-list
+-     ec (reverse (string-to-list str)))))
++     ec (ja-utf8-string->list str))))
+ 				 
+ (define skk-editor-commit-raw
+   (lambda (ec key key-state)
+--- a/scm/skk.scm
++++ b/scm/skk.scm
+@@ -30,7 +30,7 @@
+ 
+ ;; SKK is a Japanese input method
+ ;;
+-;; EUC-JP
++;; UTF-8
+ ;;
+ ;; SKKの入力は下記の状態で構成される
+ ;; Following is list of SKK input state
+@@ -44,7 +44,7 @@
+ ;;  漢字コード入力 kcode
+ ;;
+ ;;
+-(require "japanese.scm")
++(require "japanese-utf8.scm")
+ (require-custom "generic-key-custom.scm")
+ (require-custom "skk-custom.scm")
+ (require-custom "skk-key-custom.scm")
+@@ -376,19 +376,19 @@
+                   (set! skk-set-henkan-point-key '())
+ 		  skk-ja-utf8-rk-rule)
+ 		 ((= input-rule skk-input-rule-azik)
+-		  (require "japanese-azik.scm")
++		  (require "japanese-azik-utf8.scm")
+                   (set! skk-okuri-char-alist ja-utf8-azik-skk-okuri-char-alist)
+                   (set! skk-downcase-alist ja-utf8-azik-skk-downcase-alist) 
+                   (set! skk-set-henkan-point-key ja-utf8-azik-skk-set-henkan-point-key)
+ 		  ja-utf8-azik-rule)
+ 		 ((= input-rule skk-input-rule-act)
+-		  (require "japanese-act.scm")
++		  (require "japanese-act-utf8.scm")
+                   (set! skk-okuri-char-alist ja-utf8-act-skk-okuri-char-alist)
+                   (set! skk-downcase-alist ja-utf8-act-skk-downcase-alist)
+                   (set! skk-set-henkan-point-key ja-utf8-act-skk-set-henkan-point-key)
+ 		  ja-utf8-act-rule)
+ 		 ((= input-rule skk-input-rule-kzik)
+-		  (require "japanese-kzik.scm")
++		  (require "japanese-kzik-utf8.scm")
+                   (set! skk-okuri-char-alist '())
+                   (set! skk-downcase-alist '())
+                   (set! skk-set-henkan-point-key '())
+@@ -1311,7 +1311,7 @@
+ 	  (begin
+ 	    (skk-string-list-to-context-head
+ 	     sc
+-	     (string-to-list (skk-context-dcomp-word sc)))
++	     (ja-utf8-string-to-list (skk-context-dcomp-word sc)))
+ 	    (skk-context-set-nth! sc 0)
+ 	    (skk-commit sc (skk-prepare-commit-string sc)))
+ 	  (begin
+@@ -1333,7 +1333,7 @@
+ 		(begin
+ 		  (skk-string-list-to-context-head
+ 		   sc
+-		   (string-to-list dcomp))
++		   (ja-utf8-string-to-list dcomp))
+ 		  (if (skk-lib-get-entry
+                        skk-dic
+                        (skk-make-string
+@@ -1459,14 +1459,14 @@
+ 	      ((and skk-dcomp-activate?
+ 		    (not (skk-rk-pending? sc))
+ 		    (not (string=? (skk-context-dcomp-word sc) "")))
+-	       (let ((sl (string-to-list (skk-context-dcomp-word sc))))
++	       (let ((sl (ja-utf8-string-to-list (skk-context-dcomp-word sc))))
+ 		 (skk-string-list-to-context-head sc sl)
+ 		 (skk-begin-conversion sc)))
+ 	      ((and skk-dcomp-activate?
+ 		    (skk-rk-pending? sc)
+ 		    (not (string=? (skk-context-dcomp-word sc) "")))
+ 	       (skk-append-residual-kana sc)
+-	       (let ((sl (string-to-list
++	       (let ((sl (ja-utf8-string-to-list
+ 			  (skk-lib-get-dcomp-word
+                            skk-dic
+                            (skk-make-string
+@@ -1926,7 +1926,7 @@
+ 	   #t)
+        (if (skk-new-completion-from-current-comp-key? key key-state)
+ 	   (let* ((comp (skk-get-current-completion sc))
+-		  (sl (string-to-list comp)))
++		  (sl (ja-utf8-string-to-list comp)))
+ 	     (if (not (null? sl))
+ 		 (begin (skk-lib-get-completion
+                          skk-dic
+@@ -1957,7 +1957,7 @@
+ 	     ;;(skk-reset-dcomp-word sc)
+ 	     #f)
+ 	   #t)
+-       (let ((sl (string-to-list (skk-get-current-completion sc))))
++       (let ((sl (ja-utf8-string-to-list (skk-get-current-completion sc))))
+ 	 (skk-lib-clear-completions
+ 	  (skk-make-string (skk-context-head sc) (skk-context-kana-mode sc))
+ 	  skk-use-numeric-conversion?)
+@@ -2173,7 +2173,7 @@
+ 	    (skk-return-key? key key-state))
+ 	   (begin
+ 	     (if (> (length (skk-context-head sc)) 0)
+-	       (let* ((str-list (string-to-list
++	       (let* ((str-list (ja-utf8-string-to-list
+ 				  (skk-make-string
+ 				     (skk-context-head sc)
+ 				     (skk-context-kana-mode sc))))
+@@ -2327,7 +2327,7 @@
+ (register-im
+  'skk
+  "ja"
+- "EUC-JP"
++ "UTF-8"
+  skk-im-name-label
+  skk-im-short-desc
+  #f
+--- a/uim/encoding-table.c
++++ b/uim/encoding-table.c
+@@ -50,7 +50,7 @@
+   NULL
+ };
+ static const char *alias_eucjp[] = {
+-  "EUC-JIS-2004", "EUC-JISX0213",
++  "EUC-JISX0213", "EUC-JIS-2004",
+   "EUC-JP", "eucJP", "ujis",
+   "Extended_UNIX_Code_Packed_Format_for_Japanese", "euc-jp",
+   "csEUCPkdFmtJapanese",
